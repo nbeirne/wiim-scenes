@@ -1,11 +1,27 @@
 #!/usr/bin/env python3
 
-import wiim_controller
-import wiim_scenes
+import sys
+import os
 
 from flask import Flask
 from flask import request
 
+import wiim_controller
+import wiim_scenes
+
+def get_wiim_ip():
+    if not "WIIM_IP_ADDR" in os.environ:
+        return None
+    wiim_ip_addr = os.environ["WIIM_IP_ADDR"]
+    return wiim_ip_addr
+
+
+wiim_ip_addr = get_wiim_ip()
+if wiim_ip_addr is None:
+    print("You must set WIIM_IP_ADDR in the environment")
+    exit(1)
+
+controller = wiim_controller.WiimController(wiim_ip_addr)
 app = Flask(__name__)
 
 # ROUTES:
@@ -24,7 +40,6 @@ app = Flask(__name__)
 # volume/<int>
 
 
-controller = wiim_controller.WiimController("192.168.2.13")
 
 # backwards compatibility with the Wiim API
 @app.route('/httpapi.asp')

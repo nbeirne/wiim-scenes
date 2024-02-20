@@ -13,5 +13,5 @@ docker-build:
 	docker build -t flask-app .
 
 docker-run:
-	docker run -p 5000:5000 flask-app
+	docker run -p 5000:5000 -e "WIIM_IP_ADDR=$$WIIM_IP_ADDR" flask-app
 
