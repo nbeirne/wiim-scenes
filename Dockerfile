@@ -5,12 +5,12 @@ FROM python:3.9
 # Define the working directory
 WORKDIR /app
 
-# Copy the application code into the container
-COPY ./requirements.txt /app/requirements.txt
-COPY ./app/*.py /app
-
 # Install dependencies
+COPY ./requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the application code into the container
+COPY ./app/*.py /app
 
 # Expose the application port
 EXPOSE 5000
