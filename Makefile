@@ -1,8 +1,17 @@
 
 
+deps:
+	pip install --no-cache-dir -r requirements.txt
+
 dev:
-	flask --app ./flask_server.py run --reload
+	flask --app ./app/flask_server.py run --reload
 
 prod:
 	waitress-serve flask_server:app
+
+docker-build:
+	docker build -t flask-app .
+
+docker-run:
+	docker run -p 5000:5000 flask-app
 

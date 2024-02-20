@@ -12,16 +12,17 @@ app = Flask(__name__)
 # set/
 #   input/{input}
 #   output/{output}
-#   scene/{scene}
-
-# command/{command}
+#
+# command/<command>
 # media/play
 # media/pause
 # media/mute/on
-# media/mute/off
-# media/mute/toggle
+# mute/off
+# mute/toggle
+# volume/up
+# volume/down
+# volume/<int>
 
-# TODO: volume controls
 
 controller = wiim_controller.WiimController("192.168.2.13")
 
@@ -44,17 +45,38 @@ def media_pause():
     controller.media_pause()
     return "OK"
 
-@app.route("/media/mute/on")
+@app.route("/media/toggle")
+def media_toggle():
+    controller.media_toggle()
+    return "OK"
+
+
+@app.route("/vol/up")
+def volume_up():
+    controller.volume_up(6)
+    return "OK"
+
+@app.route("/vol/down")
+def volume_down():
+    controller.volume_down(6)
+    return "OK"
+
+@app.route("/vol/<int:volume>")
+def volume_set(volume):
+    controller.set_volume(volume)
+    return "OK"
+
+@app.route("/mute/on")
 def media_mute():
     controller.mute()
     return "OK"
 
-@app.route("/media/mute/off")
+@app.route("/mute/off")
 def media_unmute():
     controller.unmute()
     return "OK"
 
-@app.route("/media/mute/toggle")
+@app.route("/mute/toggle")
 def media_mute_toggle():
     controller.toggle_mute()
     return "OK"
@@ -63,6 +85,9 @@ def media_mute_toggle():
 def run_command(command):
     return controller.run_command(command)
 
+@app.route("/output/toggle/<out1>/<out2>")
+def output_toggle(out1, out2):
+    return "OK"
 
 @app.route('/set/<path:specifier>')
 def set_specifier(specifier):
@@ -95,4 +120,8 @@ def set_specifier(specifier):
     scene.set_scene()
 
     return "OK"
+
+
+if __name__ == "__main__":
+    app.run(debug=True, host='0.0.0.0')
 

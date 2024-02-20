@@ -24,8 +24,9 @@ class WiimController:
 
     # Input settings
 
-    def get_input_mode(self):
-        status = self.get_player_status()
+    def get_input_mode(self, status=None):
+        if status is None:
+            status = self.get_player_status()
         mode = status["mode"]
         # 0: none, 1:airplay, 40:aux in, 43:optical in
         if mode == "1": # mode 1 is actually airplay
@@ -73,7 +74,7 @@ class WiimController:
         return list(outputs)
 
     def enable_wireless_speaker(self, ident):
-        self.run_command("audio_cast:speaker_enable:%s" % ident)
+        self.run_command("audio_cast:speaker_enable:${0}".format(ident))
 
     def set_airplay_out(self, names=None):
         speakers = self.get_airplay_speakers()
@@ -92,7 +93,28 @@ class WiimController:
     def media_pause(self):
         self.run_command("setPlayerCmd:pause")
 
+    def media_toggle(self):
+        self.run_command("setPlayerCmd:onepause")
+
     # Volume up and down
+
+    def get_volume(self, status=None):
+        if status is None:
+            status = self.get_player_status()
+        return status["vol"]
+
+    def set_volume(self, volume):
+        volume = int(volume)
+        volume = max(0,min(100,volume))
+        self.run_command("setPlayerCmd:vol:{0}".format(volume))
+
+    def volume_up(self, step):
+        volume = int(self.get_volume())
+        self.set_volume(volume + step)
+
+    def volume_down(self, step):
+        volume = int(self.get_volume())
+        self.set_volume(volume - step)
 
     # Mute and toggles
 
@@ -102,8 +124,9 @@ class WiimController:
     def unmute(self):
         self.run_command("setPlayerCmd:mute:1")
 
-    def toggle_mute(self):
-        status = self.get_player_status()
+    def toggle_mute(self, status=None):
+        if status is None:
+            status = self.get_player_status()
         muted = status["mute"] == "0"
         if (muted):
             self.unmute()

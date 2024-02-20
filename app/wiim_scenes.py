@@ -4,6 +4,7 @@ import time
 
 import wiim_controller
 
+# TODO: toggle on button press of remote.
 # TODO: think of scenes which I actually use.
 
 # TODO: put wiim mappings in the controller into data
@@ -77,8 +78,10 @@ class SceneAnySwitch:
     def valid_inputs(self):
         return set(map(lambda k: k[2] if len(k) >=4 else k[1], self.mapping.keys()))
 
+
     def valid_outputs(self):
         return set(map(lambda k: k[3] if len(k) >=4 else k[0], self.mapping.keys()))
+
 
     def is_scene_valid(self):
         input_valid = self.input_mode in self.valid_inputs() or self.input_mode is None 
