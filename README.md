@@ -82,7 +82,7 @@ This server is a personal project. I have TODOs littered throughout. It does not
 - Proper scene management.
 
 ## The Wiim API
-This project is possible through the use of a few undocumented Wiim APIs. Here is a list of useful endpoints fo this project, but please be careful.
+This project is possible through the use of a few undocumented Wiim APIs. Here is a list of useful endpoints for this (or similar) project, but please be careful.
 
 ```
 curl http://$WIIM_IP_ADDR/httpapi.asp?command=getNewAudioOutputHardwareMode # get current output modes. hardware=1 is optical, hardware=2 is line-out, hardware=3 is coax-out.
@@ -97,6 +97,6 @@ curl http://$WIIM_IP_ADDR/httpapi.asp?command=audio_cast:speaker_stereo_group_en
 
 ```
 
-The documented API commands are available [here](https://www.wiimhome.com/pdf/HTTP%20API%20for%20WiiM%20Mini.pdf). There is a full list of API commands in [http-api.txt](./http-api.txt)
+The documented API commands are available [here](https://www.wiimhome.com/pdf/HTTP%20API%20for%20WiiM%20Mini.pdf). A full list of the undocumented API commands I found are in [http-api.txt](./http-api.txt)
 
 
