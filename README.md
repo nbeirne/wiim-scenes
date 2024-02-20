@@ -1,6 +1,9 @@
 # Wiim Scene
 
-This is proxy server meant to sit between any of your exising Home automation and a Wiim device. 
+***THIS MAY NOT WORK WITH YOUR WIIM IF ITS NOT A WIIM PRO***
+
+This is proxy server meant to sit between any of your exising Home automation and a Wiim Pro. It is intended to provide higher-level functionality over the existing API. I use it with a Lutron Caseta remote and Home Assistant.
+
 
 Using this has several benefits over using the Wiim api directly:
 - This supports output switching.
@@ -17,6 +20,7 @@ There are several ways to run the server.
 
 Essentially:
 ```
+> export WIIM_IP_ADDR="<ip>"
 > pip install --no-cache-dir -r requirements.txt
 > flask --app ./app/flask_server.py run 
 ```
@@ -61,9 +65,30 @@ airplay # in some circumstances. Airplay cannot be started really.
 ```
 
 ### Commands
-This API is backwards compatible with the Wiim API. There is also a more convenient endpoint which is equivilant.
+This API is backwards compatible with the Wiim API. There is also a more convenient endpoint which is equivalent.
 
 ```
 curl http://$ip:$port/httpapi.asp?command=$command
 curl http://$ip:$port/command/$command
 ```
+
+
+## The Wiim API
+This project is possible through the use of a few undocumented Wiim APIs. Here is a list of useful endpoints fo this project, but please be careful.
+
+```
+curl http://$WIIM_IP_ADDR/httpapi.asp?command=getNewAudioOutputHardwareMode # get current output modes. hardware=1 is optical, hardware=2 is line-out, hardware=3 is coax-out.
+curl http://$WIIM_IP_ADDR/httpapi.asp?command=audio_cast:get_speaker_list   # get wireless speaker list, including airplay2.
+curl http://$WIIM_IP_ADDR/httpapi.asp?command=audio_cast:speaker_enable:$id # enable speaker using an id from the speaker list
+curl http://$WIIM_IP_ADDR/httpapi.asp?command=audio_cast:speaker_set_password:$id:$password # unused in this project
+curl http://$WIIM_IP_ADDR/httpapi.asp?command=audio_cast:speaker_set_volume:$id:$number # unused in this project
+curl http://$WIIM_IP_ADDR/httpapi.asp?command=audio_cast:speaker_set_volume:$id:$number # unused in this project
+curl http://$WIIM_IP_ADDR/httpapi.asp?command=audio_cast:speaker_disable:$id # unused in this project
+curl http://$WIIM_IP_ADDR/httpapi.asp?command=audio_cast:speaker_stereo_group_disable:$id # unused in this project
+curl http://$WIIM_IP_ADDR/httpapi.asp?command=audio_cast:speaker_stereo_group_enable:$id # unused in this project
+
+```
+
+The documented API commands are available [here](https://www.wiimhome.com/pdf/HTTP%20API%20for%20WiiM%20Mini.pdf). There is a full list of API commands in [http-api.txt](./http-api.txt)
+
+
