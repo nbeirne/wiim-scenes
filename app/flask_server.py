@@ -100,8 +100,28 @@ def media_mute_toggle():
 def run_command(command):
     return controller.run_command(command)
 
-@app.route("/output/toggle/<out1>/<out2>")
-def output_toggle(out1, out2):
+@app.route("/output/toggle/<path:outputs_str>")
+def output_toggle(outputs_str):
+    outputs = outputs_str.split("/")
+    if len(outputs) <= 0:
+        return "No outputs specified", 400
+
+    current_output_mode = controller.get_output_mode()
+    current_idx = outputs.index(current_output_mode)
+    if current_idx is None:
+        current_idx = 0
+
+    next_idx = (current_idx + 1) % len(outputs)
+    wiim_output = outputs[next_idx]
+
+    scene = wiim_scenes.SceneAnySwitch(controller, None, wiim_output)
+    validated = scene.is_scene_valid()
+
+    if validated is not None:
+        return validated, 400
+
+    scene.set_scene()
+
     return "OK"
 
 @app.route('/set/<path:specifier>')

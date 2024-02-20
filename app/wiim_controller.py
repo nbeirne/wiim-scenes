@@ -74,7 +74,7 @@ class WiimController:
         return list(outputs)
 
     def enable_wireless_speaker(self, ident):
-        self.run_command("audio_cast:speaker_enable:${0}".format(ident))
+        self.run_command("audio_cast:speaker_enable:{0}".format(ident))
 
     def set_airplay_out(self, names=None):
         speakers = self.get_airplay_speakers()
