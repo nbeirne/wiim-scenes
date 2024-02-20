@@ -73,6 +73,14 @@ curl http://$ip:$port/command/$command
 ```
 
 
+## Limitations
+This server is a personal project. I have TODOs littered throughout. It does not support some basic features which you may find useful:
+- Streaming to as subset of your airplay devices.
+- Streaming from multiple sources (if this is even possible).
+- Linkplay grouping.
+- Setting volume per-device.
+- Proper scene management.
+
 ## The Wiim API
 This project is possible through the use of a few undocumented Wiim APIs. Here is a list of useful endpoints fo this project, but please be careful.
 
