@@ -70,25 +70,3 @@ class CommandRunner:
                 else:
                     print("unknown command: %s" % command)
 
-
-if __name__ == '__main__':
-    class Cont:
-        def cont_cmd(self, a):
-            print("cont_cmd {0}".format(a))
-
-    commands = [
-        { "cmd": "print" },
-        { "cmd": "cont_cmd", "args": [1] },
-        "print",
-        { "cmd": "cont_cmd", "args": [1] },
-    ]
-    scene = CommandRunner(Cont(), commands)
-
-    validated = scene.is_valid()
-    if validated is not None:
-        print("invalid commands: {0}".format(validated))
-        exit(1)
-
-    scene.run()
-
-
