@@ -26,10 +26,10 @@ def normalize_data(spec, orig_data):
             data = spec["default_value"]
 
         if "required" in spec and spec["required"] and data is None:
-            raise ValidationError([], spec["type"], None)
+            raise ValidationError([], None, None)
 
 
-    if spec["type"] == "list" and data is not None:
+    if data is not None:
         if "allow_single_item" in spec and spec["allow_single_item"] and type(data) is not list:
             data = [data]
 
@@ -43,26 +43,25 @@ def normalize_data(spec, orig_data):
                     raise e.with_traceback(None) from None
             data = lst
 
-    if spec["type"] == "dict":
-        if data is not None and type(data) is not dict and "default_key" in spec:
+        if type(data) is not dict and "default_key" in spec:
             data = { spec["default_key"] : data }
 
-        if "keys" in spec and type(data) is dict:
-            for key in spec["keys"]:
-                subspec = spec["keys"][key]
-                subdata = None
-                if key in data:
-                    subdata = data[key]
+    if "keys" in spec and type(data) is dict:
+        for key in spec["keys"]:
+            subspec = spec["keys"][key]
+            subdata = None
+            if key in data:
+                subdata = data[key]
 
-                try:
-                    new_data = normalize_data(subspec, subdata)
-                    if new_data is not None:
-                        data[key] = new_data
-                except ValidationError as error: 
-                    e = error.addPath("." + key)
-                    raise e.with_traceback(None) from None
+            try:
+                new_data = normalize_data(subspec, subdata)
+                if new_data is not None:
+                    data[key] = new_data
+            except ValidationError as error: 
+                e = error.addPath("." + key)
+                raise e.with_traceback(None) from None
 
-    if not typecheck(spec["type"], data) and data is not None:
+    if "type" in spec and not typecheck(spec["type"], data) and data is not None:
         raise ValidationError([], spec["type"], type(data))
 
     return data

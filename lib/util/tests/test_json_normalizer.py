@@ -1,44 +1,40 @@
 
 import unittest
 
-from .. import json_normalizer
+from ..json_normalizer import normalize_data, ValidationError
 
 
 class TestJsonNormalizer(unittest.TestCase):
     def run_test(self, spec, data, expected):
-        result = json_normalizer.normalize_data(spec, data)
+        result = normalize_data(spec, data)
         self.assertEqual(result, expected)
 
     def test_allow_single_item_with_none_is_none(self):
         spec = {
-            "type": "list",
             "allow_single_item": True,
         }
         data = None
         expected = None
 
-        self.assertEqual(json_normalizer.normalize_data(spec, data), expected)
+        self.assertEqual(normalize_data(spec, data), expected)
 
     def test_none_value_does_not_collapse(self):
         spec = {
-            "type": "dict",
             "keys": {
                 "a": {
-                    "type": "list",
                 },
             },
         }
         data = { "a": None }
         expected = { "a": None }
 
-        self.assertEqual(json_normalizer.normalize_data(spec, data), expected)
+        self.assertEqual(normalize_data(spec, data), expected)
+
 
     def test_none_value_does_not_collapse_with_single_item(self):
         spec = {
-            "type": "dict",
             "keys": {
                 "a": {
-                    "type": "list",
                     "allow_single_item": True,
                 },
             },
@@ -46,32 +42,134 @@ class TestJsonNormalizer(unittest.TestCase):
         data = { "a": None }
         expected = { "a": None }
 
-        self.assertEqual(json_normalizer.normalize_data(spec, data), expected)
+        self.assertEqual(normalize_data(spec, data), expected)
 
 
-    def test_all(self):
-        self.run_test({"type": "dict", "default_key": "d", "keys": {} }, "test", { "d": "test" } )
-        self.run_test({"type": "dict", "keys": { "d": { "type": "str", "default_value": "dv", "required": True }} }, {}, { "d": "dv" } )
-        self.run_test({"type": "dict", "default_key": "d", "keys": { "d": { "type": "str", "required": True }} }, "dv", { "d": "dv" } )
-        self.run_test({"type": "dict", "default_key": "d", "default_value": {}, "keys": { "d": { "type": "str", "default_value": "dv", "required": True }} }, None, { "d": "dv" } )
+    def test_dict_default_key(self):
+        spec = {
+            "default_key": "d", 
+            "keys": {} 
+        }
+        data = "test"
+        expected = { "d": "test" }
+        self.assertEqual(normalize_data(spec, data), expected)
 
 
-        self.run_test({"type": "list", "allow_single_item": True }, 1, [1])
-        self.run_test({"type": "list", "default_value": [] }, None, [])
+    def test_dict_override_default_value(self):
+        spec = {
+            "keys": {
+                "d": { "default_value": "dv", "required": True }
+            }
+        }
+        data = { "d": "a"}
+        expected = { "d": "a" }
+        self.assertEqual(normalize_data(spec, data), expected)
 
-        self.run_test({"type": "list", "allow_single_item": True, "default_value": [] }, None, [])
+    def test_dict_default_value(self):
+        spec = {
+            "keys": {
+                "d": { "default_value": "dv", "required": True }
+            }
+        }
+        data = {}
+        expected = { "d": "dv" }
+        self.assertEqual(normalize_data(spec, data), expected)
 
-        self.run_test({"type":"dict", "default_key": "a", "keys": { "a": { "type": "dict", "keys": { "b": { "type": "dict", "required": True } } } } }, {}, {})
+
+
+    def test_dict_default_key_default_value(self):
+        spec = {
+            "default_key": "d",
+            "default_value": "v",
+            "keys": {}
+        }
+        data = None
+        expected = { "d": "v" }
+        self.assertEqual(normalize_data(spec, data), expected)
+
+
+    def test_list_allow_single_item(self):
+        spec = { "allow_single_item": True }
+        data = 1
+        expected = [1]
+        self.assertEqual(normalize_data(spec, data), expected)
+
+    def test_list_default_value(self):
+        spec = { "default_value": [] }
+        data = None
+        expected = []
+        self.assertEqual(normalize_data(spec, data), expected)
+
+
+    def test_list_default_value_single_item(self):
+        spec = { "default_value": [], "allow_single_item": True }
+        data = None
+        expected = []
+        self.assertEqual(normalize_data(spec, data), expected)
+
+    def test_list_processes_items(self):
+        spec = { 
+            "items": {
+                "type": "int"
+            }
+        }
+        data = [1,2,3]
+        expected = [1,2,3]
+        self.assertEqual(normalize_data(spec, data), expected)
+
+        data = ["a", "b", "c"]
+        self.assertRaises(ValidationError, normalize_data, spec, data)
+
+
+    def nested_default_keys_and_values(self):
+        spec = {
+            "default_key": "d",
+            "default_value": {},
+            "keys": {
+                "i": {
+                    "default_value": "hello",
+                },
+            },
+        }
+        data = None
+        expected = { "d": { "i": "hello" } }
+        self.assertEqual(normalize_data(spec, data), expected)
+
+    def test_typecheck(self):
+        self.assertEqual(normalize_data({ "type": "str" }, "hello"), "hello")
+        self.assertEqual(normalize_data({ "type": "int" }, 0), 0)
+        self.assertEqual(normalize_data({ "type": "dict" }, {}), {})
+        self.assertEqual(normalize_data({ "type": "list" }, []), [])
+
+        self.assertRaises(ValidationError, normalize_data, { "type": "int" }, "hello")
+        self.assertRaises(ValidationError, normalize_data, { "type": "str" }, 0)
+        self.assertRaises(ValidationError, normalize_data, { "type": "list" }, {})
+        self.assertRaises(ValidationError, normalize_data, { "type": "dict" }, [])
+
+    def test_required(self):
+        self.assertEqual(normalize_data({ "required": True }, "hello"), "hello")
+
+        self.assertRaises(ValidationError, normalize_data, { "required": True }, None)
+
+        spec = {
+            "keys": {
+                "a": { "required": True }
+             }
+        }
+        self.assertRaises(ValidationError, normalize_data, spec, {})
+        self.assertEqual(normalize_data(spec, { "a": 0 }), { "a": 0 })
+
+
+    def test_complex(self):
+        self.run_test({ "default_key": "d", "keys": { "d": { "required": True }} }, "dv", { "d": "dv" } )
+        self.run_test({ "default_key": "a", "keys": { "a": { "keys": { "b": { "required": True } } } } }, {}, {})
 
         self.run_test({
-            "type": "dict",
             "keys": {
                 "input": {
-                    "type": "dict",
                     "default_key": "type",
                     "keys": {
                         "type": {
-                            "type": "str",
                             "required": True,
                         },
                     },
@@ -82,42 +180,33 @@ class TestJsonNormalizer(unittest.TestCase):
 
         # below is a complex test.
         basic_spec = {
-            "type": "dict",
             "keys": {
                 "no_match": {
-                    "type": "list",
                 },
                 "default_val": {
-                    "type": "bool",
                     "default_value": True,
                     "required": True,
                 },
                 "insert_lst": {
-                    "type": "list",
                     "allow_single_item": True,
                 },
                 "insert_dict": {
-                    "type": "dict",
                     "default_key": "key",
                 },
                 "insert_dict_default": {
-                    "type": "dict",
                     "default_key": "key",
                 },
                 "dict_default": {
-                    "type": "dict",
                     "default_key": "key",
                 },
             }
         }
         spec = {
-            "type": "dict",
             "default_key": "some",
             "keys": {
                 **basic_spec["keys"],
                 "dict_nested": basic_spec,
                 "array": {
-                    "type": "list",
                     "items": basic_spec
                 }
             }

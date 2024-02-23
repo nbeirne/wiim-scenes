@@ -7,7 +7,7 @@ dev:
 	flask --app ./app/flask_server.py run --reload
 
 test:
-	python -m unittest
+	python3 -m unittest
 
 prod:
 	waitress-serve flask_server:app
