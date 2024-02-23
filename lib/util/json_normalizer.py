@@ -18,6 +18,14 @@ class ValidationError(Exception):
 def typecheck(type_str, value):
     return getattr(sys.modules['builtins'], type_str) == type(value)
 
+# supported keys:
+# type
+# required
+# allow_single_item
+# default_key
+# default_value
+# keys
+# items
 def normalize_data(spec, orig_data):
     data = deepcopy(orig_data)
 
