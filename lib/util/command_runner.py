@@ -3,6 +3,8 @@
 import time
 import json
 
+from ..util import json_normalizer
+
 command_spec = {
     "type": "list",
     "items": {
@@ -33,7 +35,7 @@ class CommandRunner:
         }
 
     def normalized_commands(self, commands):
-        return normalize_data(command_spec, commands)
+        return json_normalizer.normalize_data(command_spec, commands)
 
     def is_valid(self):
         commands = None

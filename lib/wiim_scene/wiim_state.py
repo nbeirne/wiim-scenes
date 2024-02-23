@@ -72,6 +72,7 @@ state_spec = {
 
 def parse_current_state(player_status, player_output_state, player_airplay_speakers=None):
     state = {
+        "status": player_status["status"],
         "volume": int(player_status["vol"]),
         "input": {
             "mode": wiim_controller.parse_input_mode(player_status["mode"])

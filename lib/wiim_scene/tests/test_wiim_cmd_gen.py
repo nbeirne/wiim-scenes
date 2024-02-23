@@ -58,53 +58,53 @@ class TestModule(unittest.TestCase):
       self.assertEqual(expected, spec_scene_c, msg=msg)
 
   def test_no_changes(self):
-    self.run_test('line-in', 'airplay',  'line-in', 'airplay',  [])
+    self.run_test('line-in', 'airplay',  'line-in', 'airplay',  ['set_airplay_out'])
     self.run_test('line-in', 'line-out', 'line-in', 'line-out', [])
     self.run_test('optical', 'line-out', 'optical', 'line-out', [])
-    self.run_test('optical', 'airplay',  'optical', 'airplay',  [])
+    self.run_test('optical', 'airplay',  'optical', 'airplay',  ['set_airplay_out'])
 
   def test_no_ios_specified_has_no_change(self):
     self.run_test('line-in', 'line-out', None, None, [])
-    self.run_test('line-in', 'airplay',  None, None, [])
+    self.run_test('line-in', 'airplay',  None, None, ['set_airplay_out'])
     self.run_test('optical', 'line-out', None, None, [])
-    self.run_test('optical', 'airplay',  None, None, [])
+    self.run_test('optical', 'airplay',  None, None, ['set_airplay_out'])
     self.run_test('airplay', 'line-out', None, None, [])
-    self.run_test('airplay', 'airplay',  None, None, [])
+    self.run_test('airplay', 'airplay',  None, None, ['set_airplay_out'])
 
 
   def test_none_output_is_no_change(self):
     self.run_test('line-in', 'line-out', 'line-in', None, [])
-    self.run_test('line-in', 'airplay',  'line-in', None, [])
+    self.run_test('line-in', 'airplay',  'line-in', None, ['set_airplay_out' ])
     self.run_test('optical', 'line-out', 'optical', None, [])
-    self.run_test('optical', 'airplay',  'optical', None, [])
+    self.run_test('optical', 'airplay',  'optical', None, ['set_airplay_out' ])
 
 
   def test_none_input_is_no_change(self):
     self.run_test('line-in', 'line-out', None, 'line-out', [])
-    self.run_test('line-in', 'airplay',  None, 'airplay',  [])
+    self.run_test('line-in', 'airplay',  None, 'airplay',  ['set_airplay_out'])
     self.run_test('optical', 'line-out', None, 'line-out', [])
-    self.run_test('optical', 'airplay',  None, 'airplay',  [])
+    self.run_test('optical', 'airplay',  None, 'airplay',  ['set_airplay_out'])
     self.run_test('airplay', 'line-out', None, 'line-out', [])
-    self.run_test('airplay', 'airplay',  None, 'airplay',  [])
+    self.run_test('airplay', 'airplay',  None, 'airplay',  ['set_airplay_out'])
 
   def test_simple_input_change(self):
     self.run_test('optical', 'line-out', 'line-in', 'line-out', ['set_line_in'])
     self.run_test('airplay', 'line-out', 'line-in', 'line-out', ['set_line_in'])
-    self.run_test('optical', 'airplay',  'line-in', 'airplay',  ['set_line_in'])
-    self.run_test('airplay', 'airplay',  'line-in', 'airplay',  ['set_line_in'])
+    self.run_test('optical', 'airplay',  'line-in', 'airplay',  ['set_airplay_out', 'set_line_in'])
+    self.run_test('airplay', 'airplay',  'line-in', 'airplay',  ['set_airplay_out', 'set_line_in'])
     self.run_test('line-in', 'line-out', 'optical', 'line-out', ['set_optical_in'])
     self.run_test('airplay', 'line-out', 'optical', 'line-out', ['set_optical_in'])
-    self.run_test('line-in', 'airplay',  'optical', 'airplay',  ['set_optical_in'])
-    self.run_test('airplay', 'airplay',  'optical', 'airplay',  ['set_optical_in'])
+    self.run_test('line-in', 'airplay',  'optical', 'airplay',  ['set_airplay_out', 'set_optical_in'])
+    self.run_test('airplay', 'airplay',  'optical', 'airplay',  ['set_airplay_out', 'set_optical_in'])
 
     self.run_test('optical', 'line-out', 'line-in',  None,      ['set_line_in'])
-    self.run_test('optical', 'airplay',  'line-in',  None,      ['set_line_in'])
+    self.run_test('optical', 'airplay',  'line-in',  None,      ['set_airplay_out', 'set_line_in'])
     self.run_test('airplay', 'line-out', 'line-in',  None,      ['set_line_in'])
-    self.run_test('airplay', 'airplay',  'line-in',  None,      ['set_line_in'])
+    self.run_test('airplay', 'airplay',  'line-in',  None,      ['set_airplay_out', 'set_line_in'])
     self.run_test('line-in', 'line-out', 'optical',  None,      ['set_optical_in'])
-    self.run_test('line-in', 'airplay',  'optical',  None,      ['set_optical_in'])
+    self.run_test('line-in', 'airplay',  'optical',  None,      ['set_airplay_out', 'set_optical_in'])
     self.run_test('airplay', 'line-out', 'optical',  None,      ['set_optical_in'])
-    self.run_test('airplay', 'airplay',  'optical',  None,      ['set_optical_in'])
+    self.run_test('airplay', 'airplay',  'optical',  None,      ['set_airplay_out', 'set_optical_in'])
 
 
   def test_input_output_change(self):
@@ -161,8 +161,6 @@ class TestModule(unittest.TestCase):
     spec_scene = wiim_cmd_gen.SceneSpec(curr_state, dest_state)
     spec_scene_c = spec_scene.get_commands()
 
-    print(curr_state)
-    print(dest_state)
     self.assertEqual([{"cmd": "enable_wireless_speaker", "args": "0", "meta": "n0" }], spec_scene_c)
 
 

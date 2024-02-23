@@ -159,6 +159,31 @@ class TestJsonNormalizer(unittest.TestCase):
         self.assertRaises(ValidationError, normalize_data, spec, {})
         self.assertEqual(normalize_data(spec, { "a": 0 }), { "a": 0 })
 
+    def test_parse(self):
+        spec = {
+            "type": "list",
+            "items": {
+                "type": "dict",
+                "default_key": "cmd",
+                "keys": {
+                    "cmd": {
+                        "type": "str",
+                        "required": True,
+                    },
+                    "args": {
+                        "type": "list",
+                        "allow_single_item": True,
+                        "default_value": [],
+                        "required": True,
+                    },
+                },
+            },
+        }
+
+        data = [ { "cmd": "a", "args": ["A", 1] } ]
+        expected = [ { "cmd": "a", "args": ["A", 1] } ]
+        self.assertEqual(normalize_data(spec, data), expected)
+
 
     def test_complex(self):
         self.run_test({ "default_key": "d", "keys": { "d": { "required": True }} }, "dv", { "d": "dv" } )
