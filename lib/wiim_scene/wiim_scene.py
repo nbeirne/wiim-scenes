@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-import util.json_normalizer as json_normalizer
+from ..util import json_normalizer
 
 # Define what we expect a Scene to look like
 scene_spec = {

@@ -5,12 +5,12 @@ import os
 from flask import Flask
 from flask import request
 
-import util.command_runner as command_runner
+from ..util import command_runner
 
-import wiim_controller
-import wiim_cmd_gen
-import wiim_state
-import wiim_scene
+from ..wiim_scene import wiim_controller 
+from ..wiim_scene import wiim_cmd_gen
+from ..wiim_scene import wiim_state
+from ..wiim_scene import wiim_scene
 
 def get_wiim_ip():
     if not "WIIM_IP_ADDR" in os.environ:
@@ -201,7 +201,4 @@ def set_raw_scene(scene):
         return validated, 400
     scene.set_scene()
     return "OK"
-
-if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0')
 

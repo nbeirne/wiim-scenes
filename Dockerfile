@@ -10,11 +10,13 @@ COPY ./requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code into the container
-COPY ./app/*.py /app
+RUN mkdir -p /app/lib
+COPY ./lib /app/lib
+COPY ./server.py /app
 
 # Expose the application port
 EXPOSE 5000
 
 # Set the startup command
-CMD ["python", "flask_server.py"]
+CMD ["python", "server.py"]
 

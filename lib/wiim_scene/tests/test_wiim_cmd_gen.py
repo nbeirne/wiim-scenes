@@ -1,8 +1,7 @@
 import unittest
 
-import wiim_scene
-from wiim_cmd_gen import SceneSpec
-
+from .. import wiim_scene
+from .. import wiim_cmd_gen
 
 class TestModule(unittest.TestCase):
 
@@ -10,7 +9,7 @@ class TestModule(unittest.TestCase):
       curr_state = self.create_state(curr_in, curr_out)
       dest_scene = self.create_scene(dest_in, dest_out)
       dest_state = wiim_scene.apply_scene_over_state(curr_state, dest_scene)
-      spec_scene = SceneSpec(curr_state, dest_state)
+      spec_scene = wiim_cmd_gen.SceneSpec(curr_state, dest_state)
       spec_scene_c = spec_scene.get_commands()
       return spec_scene_c
 
@@ -52,7 +51,7 @@ class TestModule(unittest.TestCase):
       dest_scene = wiim_scene.normalize_scene(json_scene)
       dest_state = wiim_scene.apply_scene_over_state(curr_state, dest_scene)
 
-      spec_scene = SceneSpec(curr_state, dest_state)
+      spec_scene = wiim_cmd_gen.SceneSpec(curr_state, dest_state)
       spec_scene_c = spec_scene.get_commands()
 
       msg = "Failed with {0} {1} {2} {3}".format(curr_in, curr_out, dest_in, dest_out)
@@ -149,7 +148,7 @@ class TestModule(unittest.TestCase):
     dest_scene = self.create_scene("optical", { "mode": "airplay", "airplay": { "selected": True }})
 
     dest_state = wiim_scene.apply_scene_over_state(curr_state, dest_scene)
-    spec_scene = SceneSpec(curr_state, dest_state)
+    spec_scene = wiim_cmd_gen.SceneSpec(curr_state, dest_state)
     spec_scene_c = spec_scene.get_commands()
 
     self.assertEqual([{"cmd": "enable_wireless_speaker", "args": "0", "meta": "n0" }], spec_scene_c)
@@ -159,7 +158,7 @@ class TestModule(unittest.TestCase):
     dest_scene = self.create_scene("optical", { "mode": "airplay", "airplay": { "selected": True }})
 
     dest_state = wiim_scene.apply_scene_over_state(curr_state, dest_scene)
-    spec_scene = SceneSpec(curr_state, dest_state)
+    spec_scene = wiim_cmd_gen.SceneSpec(curr_state, dest_state)
     spec_scene_c = spec_scene.get_commands()
 
     print(curr_state)

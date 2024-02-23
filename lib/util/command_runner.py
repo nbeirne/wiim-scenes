@@ -3,8 +3,6 @@
 import time
 import json
 
-from util.json_normalizer import ValidationError, normalize_data
-
 command_spec = {
     "type": "list",
     "items": {

@@ -1,7 +1,7 @@
 from copy import deepcopy
 
-import wiim_controller
-import util.json_normalizer as json_normalizer
+from . import wiim_controller
+from ..util import json_normalizer
 
 # define what we expect state to look like.
 # side note: a state is a stricter version of a scene

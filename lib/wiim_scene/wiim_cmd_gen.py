@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import util.command_runner as command_runner
+from ..util import command_runner
 
 
 # TODO feature: global volume control in scene

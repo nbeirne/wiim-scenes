@@ -1,12 +1,12 @@
 
 import unittest
 
-import util.json_normalizer
+from .. import json_normalizer
 
 
 class TestJsonNormalizer(unittest.TestCase):
     def run_test(self, spec, data, expected):
-        result = util.json_normalizer.normalize_data(spec, data)
+        result = json_normalizer.normalize_data(spec, data)
         self.assertEqual(result, expected)
 
     def test_allow_single_item_with_none_is_none(self):
@@ -17,7 +17,7 @@ class TestJsonNormalizer(unittest.TestCase):
         data = None
         expected = None
 
-        self.assertEqual(util.json_normalizer.normalize_data(spec, data), expected)
+        self.assertEqual(json_normalizer.normalize_data(spec, data), expected)
 
     def test_none_value_does_not_collapse(self):
         spec = {
@@ -31,7 +31,7 @@ class TestJsonNormalizer(unittest.TestCase):
         data = { "a": None }
         expected = { "a": None }
 
-        self.assertEqual(util.json_normalizer.normalize_data(spec, data), expected)
+        self.assertEqual(json_normalizer.normalize_data(spec, data), expected)
 
     def test_none_value_does_not_collapse_with_single_item(self):
         spec = {
@@ -46,7 +46,7 @@ class TestJsonNormalizer(unittest.TestCase):
         data = { "a": None }
         expected = { "a": None }
 
-        self.assertEqual(util.json_normalizer.normalize_data(spec, data), expected)
+        self.assertEqual(json_normalizer.normalize_data(spec, data), expected)
 
 
     def test_all(self):

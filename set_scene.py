@@ -1,14 +1,16 @@
+#!/usr/bin/env python3
+
 import os
 import sys
 import json
 import argparse
 
-import util.command_runner as command_runner
+from lib.util import command_runner 
 
-import wiim_controller
-import wiim_cmd_gen
-import wiim_state
-import wiim_scene
+import lib.wiim_scene.wiim_controller as wiim_controller
+import lib.wiim_scene.wiim_cmd_gen as wiim_cmd_gen
+import lib.wiim_scene.wiim_state as wiim_state
+import lib.wiim_scene.wiim_scene as wiim_scene
 
 
 parser = argparse.ArgumentParser(
