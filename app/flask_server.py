@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
-import sys
 import os
 
 from flask import Flask
 from flask import request
 
+import util.command_runner as command_runner
+
 import wiim_controller
-import wiim_scenes
+import wiim_cmd_gen
+import wiim_state
+import wiim_scene
 
 def get_wiim_ip():
     if not "WIIM_IP_ADDR" in os.environ:
@@ -39,6 +42,17 @@ app = Flask(__name__)
 # volume/down
 # volume/<int>
 
+
+def run_scene(controller, scene):
+    cr = command_runner.SceneRunner(controller, scene)
+    validated = cr.is_scene_valid()
+
+    if validated is not None:
+        return validated, 400
+
+    cr.set_scene()
+
+    return "OK"
 
 
 # backwards compatibility with the Wiim API
@@ -100,12 +114,27 @@ def media_mute_toggle():
 def run_command(command):
     return controller.run_command(command)
 
+
+# Below here are the interesting commands
+
+
+@app.route('/scene/current')
+def current_scene():
+    player_status = controller.get_player_status()
+    player_output_state = controller.get_output_state()
+    player_airplay_speakers = None
+    if wiim_controller.parse_output_state(player_output_state) == "airplay":
+        player_airplay_speakers = controller.get_airplay_speakers()
+
+    return wiim_state.parse_current_state(player_status, player_output_state, player_airplay_speakers)
+
 @app.route("/output/toggle/<path:outputs_str>")
 def output_toggle(outputs_str):
     outputs = outputs_str.split("/")
     if len(outputs) <= 0:
         return "No outputs specified", 400
 
+    current_input_mode = controller.get_input_mode()
     current_output_mode = controller.get_output_mode()
     current_idx = outputs.index(current_output_mode)
     if current_idx is None:
@@ -114,15 +143,12 @@ def output_toggle(outputs_str):
     next_idx = (current_idx + 1) % len(outputs)
     wiim_output = outputs[next_idx]
 
-    scene = wiim_scenes.SceneAnySwitch(controller, None, wiim_output)
-    validated = scene.is_scene_valid()
+    spec = {
+        "output": wiim_output
+    }
+    scene = wiim_cmd_gen.SceneSpec(current_input_mode, current_output_mode, None, spec)
+    return run_scene(controller, scene)
 
-    if validated is not None:
-        return validated, 400
-
-    scene.set_scene()
-
-    return "OK"
 
 @app.route('/set/<path:specifier>')
 def set_specifier(specifier):
@@ -132,8 +158,20 @@ def set_specifier(specifier):
 
     specifiers = list(zip(specifiers[::2], specifiers[1::2])) # pair elements
 
+    scene = {
+        "input": None,
+        "output": None, 
+        "airplay_devices": None, # { name: string, volume: int }
+        "volume": None,
+    }
+
     wiim_output = None
     wiim_input = None
+
+    commands = {
+        "input": 1,
+        "output": 1,
+    }
 
     for (cmd, dest) in specifiers:
         if cmd == "input":
@@ -143,19 +181,26 @@ def set_specifier(specifier):
         else:
             return "unknown specifier command {0}".format(cmd), 400
 
-    scene = wiim_scenes.SceneAnySwitch(controller, wiim_input, wiim_output)
+    current_input_mode = controller.get_input_mode()
+    current_output_mode = controller.get_output_mode()
+
+    spec = {
+        "input": wiim_input,
+        "output": wiim_output,
+    }
+    scene = wiim_cmd_gen.SceneSpec(current_input_mode, current_output_mode, None, spec)
+    return run_scene(controller, scene)
+
+
+@app.route("/raw/scene/<path:scene>")
+def set_raw_scene(scene):
+    scene = wiim_scene.SceneSpec(controller, scene)
     validated = scene.is_scene_valid()
     if validated is not None:
         print("invalid scene...")
         return validated, 400
-
-    print("wiim_input: {0}".format(wiim_input))
-    print("wiim_output: {0}".format(wiim_output))
-
     scene.set_scene()
-
     return "OK"
-
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')

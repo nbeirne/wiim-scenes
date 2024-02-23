@@ -6,15 +6,45 @@ import urllib3
 
 urllib3.disable_warnings()
 
+
+def parse_input_mode(mode):
+    if mode == "1": # mode 1 is actually airplay
+        return "airplay"
+    if mode == "10": 
+        return "default"
+    if mode == "31":
+        return "spotify"
+    if mode == "40":
+        return "line-in"
+    if mode == "43":
+        return "optical"
+    return mode
+
+def parse_output_state(state):
+    if state["source"] == "1":
+        return "bluetooth"
+    if state["airplay"] == "1":
+        return "airplay"
+    if state["hardware"] == "1":
+        return "optical"
+    if state["hardware"] == "2":
+        return "line-out"
+    if state["hardware"] == "3":
+        return "coax-out"
+    return state
+
+
 class WiimController:
     # https://www.wiimhome.com/pdf/HTTP%20API%20for%20WiiM%20Mini.pdf
-    def __init__(self, ip):
+    def __init__(self, ip, verbose=False):
         self.ip = ip
+        self.verbose = verbose
 
     def run_command(self, command):
         url = "https://%s/httpapi.asp?command=%s" % (self.ip, command)
         response = requests.get(url, verify=False)
-        print("%s resp: %s" % (command, response.text))
+        if self.verbose:
+            print("API command: %s. got: %s" % (command, response.text))
         return response.text
 
     def get_player_status(self):
@@ -24,23 +54,9 @@ class WiimController:
 
     # Input settings
 
-    def get_input_mode(self, status=None):
-        if status is None:
-            status = self.get_player_status()
-        mode = status["mode"]
-        # 0: none, 1:airplay, 40:aux in, 43:optical in
-        if mode == "1": # mode 1 is actually airplay
-            return "airplay"
-        if mode == "10": 
-            return "default"
-        if mode == "31":
-            return "spotify"
-        if mode == "40":
-            return "line-in"
-        if mode == "43":
-            return "optical"
-        return mode
-
+    def get_input_mode(self):
+        mode = self.get_player_status()["mode"]
+        return parse_input_mode(mode)
 
     def set_line_in(self):
         self.run_command("setPlayerCmd:switchmode:line-in")
@@ -51,21 +67,19 @@ class WiimController:
     def set_wifi_in(self):
         self.run_command("setPlayerCmd:switchmode:wifi")
 
+    def media_play_url(self, url):
+        self.run_command("setPlayerCmd:play:{0}".format(url))
+
+    # playlist index https://10.10.10.254/httpapi.asp?command=setPlayerCmd:playlist:url:<index>
+
     # Output settings
 
-    def get_output_mode(self):
+    def get_output_state(self):
         text = self.run_command("getNewAudioOutputHardwareMode")
-        data = json.loads(text) 
-        if data["airplay"] == "1":
-            return "airplay"
-        if data["hardware"] == "1":
-            return "optical"
-        if data["hardware"] == "2":
-            return "line-out"
-        if data["hardware"] == "3":
-            return "coax-out"
-        return data
+        return json.loads(text) 
 
+    def get_output_mode(self):
+        return parse_output_state(self.getOutputState())
 
     def get_airplay_speakers(self):
         text = self.run_command("audio_cast:get_speaker_list")
@@ -75,6 +89,14 @@ class WiimController:
 
     def enable_wireless_speaker(self, ident):
         self.run_command("audio_cast:speaker_enable:{0}".format(ident))
+
+    def disable_wireless_speaker(self, ident):
+        self.run_command("audio_cast:speaker_disable:{0}".format(ident))
+
+    def set_wireless_speaker_volume(self, ident, volume):
+        volume = int(volume)
+        volume = max(0,min(100,volume))
+        self.run_command("audio_cast:speaker_set_volume:{0}:{1}".format(ident, volume))
 
     def set_airplay_out(self, names=None):
         speakers = self.get_airplay_speakers()

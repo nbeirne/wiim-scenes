@@ -1,0 +1,9 @@
+{
+    "output": {
+        "mode": "airplay",
+        "airplay": [
+            { "selected": true },
+            { "device": "AppleTV", "selected": false }
+        ]
+    }
+}
