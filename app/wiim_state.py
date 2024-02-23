@@ -68,7 +68,6 @@ state_spec = {
     },
 }
 
-
 # current scene creation from external info
 
 def parse_current_state(player_status, player_output_state, player_airplay_speakers=None):
@@ -104,4 +103,6 @@ def create_airplay_list(player_output_state, player_airplay_speakers):
     return  {
         "airplay": list(map(filter_airplay_info, player_airplay_speakers))
     }
+
+
 
