@@ -36,15 +36,17 @@ def parse_output_state(state):
 
 class WiimController:
     # https://www.wiimhome.com/pdf/HTTP%20API%20for%20WiiM%20Mini.pdf
-    def __init__(self, ip, verbose=False):
+    def __init__(self, ip, verbose=0):
         self.ip = ip
         self.verbose = verbose
 
     def run_command(self, command):
         url = "https://%s/httpapi.asp?command=%s" % (self.ip, command)
         response = requests.get(url, verify=False)
-        if self.verbose:
-            print("API command: %s. got: %s" % (command, response.text))
+        if self.verbose == 1:
+            print("API command: {0}".format(command))
+        if self.verbose == 2:
+            print("API command: {0}, got {1}".format(command, response.text))
         return response.text
 
     def get_player_status(self):

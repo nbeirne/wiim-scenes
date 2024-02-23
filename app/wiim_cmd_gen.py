@@ -3,30 +3,17 @@
 import util.command_runner as command_runner
 
 
-# TODO: auto normalize scenes, commands, and states
-
-# TODO: airplay device query: seperateseperate  "query" and "set"
-
+# TODO feature: global volume control in scene
+# TODO: fix flask scenes
+# TODO: only pause if media is playing OR changing outputs
+# TODO: test force airplay 
 # TODO: airplay force setup 'selected' and/or 'volume'
 
-# TODO: scene spec json. 
-# TODO: fix mapping inp[uts/outputs not hanlding weird inputs
+# TODO refactor: auto normalize scenes, commands, and states
 
-# TODO: homepod stereo group
-
-# TODO: toggle on button press of remote.
-# TODO: think of scenes which I actually use.
-
-# TODO: set only inputs OR only outputs
-    # - set output fails when input is not "expected"
-
-# TODO: put wiim mappings in the controller into data
-
-# TODO: make set/ string support muting and volume.
-# TODO: scenes should have json spec
-# TODO: scenes should support volumes ??
-# TODO: support more streaming to specific airplay devices.
-# TODO: play specific media
+# TODO feature: airplay device query: seperate  "query" and "set"
+# TODO feature: play specific media
+# TODO feature: homepod stereo groups
 
 
 # INPUTS:
