@@ -3,10 +3,9 @@
 import util.command_runner as command_runner
 
 
-# TODO: explicit "normalize command" function. Expand text command into cmd, etc
-# TODO: explicit "normalize scene" function. collapse things, etc
-# TODO: explicit "normalize airplay set" function. collapse things, etc
+# TODO: auto normalize scenes, commands, and states
 
+# TODO: airplay device query: seperateseperate  "query" and "set"
 
 # TODO: airplay force setup 'selected' and/or 'volume'
 

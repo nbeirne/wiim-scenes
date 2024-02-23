@@ -4,8 +4,6 @@ import wiim_scene
 from wiim_cmd_gen import SceneSpec
 
 
-# TODO: coax tests
-# TODO: None
 class TestModule(unittest.TestCase):
 
   def get_commands(self, curr_in, curr_out, dest_in, dest_out):
