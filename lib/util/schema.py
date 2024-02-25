@@ -26,7 +26,7 @@ def typecheck(type_str, value):
 # default_value
 # keys
 # items
-def normalize_data(spec, orig_data):
+def normalize_schema(spec, orig_data):
     data = deepcopy(orig_data)
 
     if data is None:
@@ -45,7 +45,7 @@ def normalize_data(spec, orig_data):
             lst = list()
             for index, item in enumerate(data):
                 try: 
-                    lst.append(normalize_data(spec["items"], item))
+                    lst.append(normalize_schema(spec["items"], item))
                 except ValidationError as error: 
                     e = error.addPath("[" + str(index) + "]")
                     raise e.with_traceback(None) from None
@@ -62,7 +62,7 @@ def normalize_data(spec, orig_data):
                 subdata = data[key]
 
             try:
-                new_data = normalize_data(subspec, subdata)
+                new_data = normalize_schema(subspec, subdata)
                 if new_data is not None:
                     data[key] = new_data
             except ValidationError as error: 

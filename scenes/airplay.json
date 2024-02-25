@@ -1,11 +1,10 @@
 {
-    "volume": 40,
     "output": {
         "mode": "airplay",
         "airplay": [
-            { "selected": true, "volume": 20, "force": true },
-            { "device": "HomePod", "volume": 30 },
-            { "device": "AppleTV", "selected": false, "force": false }
+            { "name": "Symphonisk", "selected": true, "volume": 20 },
+            { "name": "Kitchen", "volume": 40 },
+            { "name": "Sunroom", "volume": 30 }
         ]
     }
 }

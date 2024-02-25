@@ -37,25 +37,59 @@ curl http://$ip:$port/media/toggle
 
 ### Volume and Muting
 ```
-curl http://$ip:$port/vol/mute
 curl http://$ip:$port/vol/up
+curl http://$ip:$port/vol/up/$increment
 curl http://$ip:$port/vol/down
+curl http://$ip:$port/vol/down/$increment
 curl http://$ip:$port/vol/$volume # volume is between 0 and 100
+
+curl http://$ip:$port/mute/on
+curl http://$ip:$port/mute/off
+curl http://$ip:$port/mute/toggle
 ```
 
 ### Setting Scenes and Outputs
 ```
-curl http://$ip:$port/outputs/toggle/<list>/<of>/<outputs> # Rotate through the list of outputs.
-curl http://$ip:$port/set/output/$output
-curl http://$ip:$port/set/input/$input
-curl http://$ip:$port/set/input/$input/output/$output
+curl http://$ip:$port/scene # GET to get the current scene. POST with a scene JSON to set a scene.
 ```
 
-#### Supported outputs:
+You may also POST a list of scenes to the scene endpoint. If a match to the current state exists in that list, it rotates to the next scene.
+
+
+#### Scenes
+A scene schema exists in lib/wiim_scene/wiim_scene.py. Any of the parameters may be omitted.
 ```
-airplay
-line-out
+{
+    "volume": number,
+    "input": {
+        "mode": "line-in | optical"
+    }
+    "output": {
+        "mode": "line-out | coax-out | airplay",
+        "airplay": [
+            {
+                "name": "name to query",
+                "id": "id to query",
+                "device": "device type to query",
+                "selected": boolean,
+                "volume": int,
+                "notes": [
+                    "Query airplay devices by name, id, and device type. Sets selected and volume if present.",
+                    "If selected is not present it defaults to true",
+                    "When there are multiple of these lists, the last match takes priority"
+                ]
+            }
+        ]
+    }
+}
 ```
+
+These scenes can be annoying to write. There are shortcuts to writing them. 
+1. The input mode may be specified with a simple string. Example: `{ "input": "line-in" }`.
+2. The output mode may be specified with a simple string. Example: `{ "output": "line-out" }`.
+3. If outputing to airplay and there is no airplay dictionary, it defaults to selecting all airplay devices.
+4. An airplay device list may just use the name, instead of specifying a full dictionary. Example: `{ "output": { "mode": "airplay", "airplay": ["device1", "device2"] }`
+
 
 #### Supported inputs:
 ```

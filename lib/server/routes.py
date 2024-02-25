@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 
 import os
+import json
 
 from flask import Flask
 from flask import request
 
-from ..util import command_runner
+from ..util.schema import ValidationError
 
-from ..wiim_scene import wiim_controller 
-from ..wiim_scene import wiim_cmd_gen
-from ..wiim_scene import wiim_state
-from ..wiim_scene import wiim_scene
+from ..wiim_scene.wiim_device      import WiimDevice
+from ..wiim_scene.wiim_scene       import WiimScene
+from ..wiim_scene.scene_controller import SceneController
+
+from .scene_db import SceneDb
 
 def get_wiim_ip():
     if not "WIIM_IP_ADDR" in os.environ:
@@ -18,41 +20,65 @@ def get_wiim_ip():
     wiim_ip_addr = os.environ["WIIM_IP_ADDR"]
     return wiim_ip_addr
 
+def get_scene_db_path():
+    if not "WIIM_SCENE_DB_PATH" in os.environ:
+        return ".scenes"
+    wiim_scene_db_path = os.environ["WIIM_SCENE_DB_PATH"]
+    return wiim_scene_db_path
 
 wiim_ip_addr = get_wiim_ip()
 if wiim_ip_addr is None:
     print("You must set WIIM_IP_ADDR in the environment")
     exit(1)
 
-controller = wiim_controller.WiimController(wiim_ip_addr)
+wiim_device = WiimDevice(wiim_ip_addr, verbose=True)
 app = Flask(__name__)
 
-# ROUTES:
-# set/
-#   input/{input}
-#   output/{output}
-#
+
+# TODO: use object for WiimState (move some scene methods to State).
+# TODO: refactor: auto normalize scenes, commands, and states
+
+
+# TODO: pause before changing airplay speakers
+# TODO: only pause if media is playing OR changing outputs AND playing audio
+
+
+####
+
+# TODO feature: airplay device query: seperate  "query" and "set"
+# TODO feature: play specific media
+# TODO feature: homepod stereo groups
+# TODO feature: get and set EQ
+# TODO feature: debug /apply and /cmd should work with named scenes
+
+
+# Scene API:
+
+# /scene             GET current scene.                                               POST with JSON to set scene. If JSON is list: find current and go to the next one.
+# /scene/debug/state GET the state that this scene would go to
+# /scene/debug/cmd   GET the list of commands which would be run
+
+# /scenes             GET list of scenes.  POST with a name or a list to set the scene
+# /scenes/<name>      GET to get json.     PUT with JSON to save a scene to this name. POST to set scene.
+
+
+# Basic API 
+
 # command/<command>
+
 # media/play
 # media/pause
+# media/toggle
+
 # media/mute/on
 # mute/off
 # mute/toggle
 # volume/up
+# volume/up/<int>
 # volume/down
+# volume/down/<int>
 # volume/<int>
-
-
-def run_scene(controller, scene):
-    cr = command_runner.SceneRunner(controller, scene)
-    validated = cr.is_scene_valid()
-
-    if validated is not None:
-        return validated, 400
-
-    cr.set_scene()
-
-    return "OK"
+#
 
 
 # backwards compatibility with the Wiim API
@@ -62,143 +88,151 @@ def command_compat():
     if command is None:
         return "no command specified", 404
 
-    return controller.run_command(command)
+    return wiim_device.run_command(command)
+
+
+@app.route("/command/<path:command>")
+def run_command(command):
+    return wiim_device.run_command(command)
+
 
 @app.route("/media/play")
 def media_play():
-    controller.media_play()
+    wiim_device.media_play()
     return "OK"
 
 @app.route("/media/pause")
 def media_pause():
-    controller.media_pause()
+    wiim_device.media_pause()
     return "OK"
 
 @app.route("/media/toggle")
 def media_toggle():
-    controller.media_toggle()
+    wiim_device.media_toggle()
     return "OK"
 
 
-@app.route("/vol/up")
-def volume_up():
-    controller.volume_up(6)
+@app.route("/vol/up", defaults={"amount": 6})
+@app.route("/vol/up/<int:amount>")
+def volume_up(amount):
+    wiim_device.volume_up(amount)
     return "OK"
 
-@app.route("/vol/down")
-def volume_down():
-    controller.volume_down(6)
+@app.route("/vol/down", defaults={"amount": 6})
+@app.route("/vol/down/<int:amount>")
+def volume_down(amount):
+    wiim_device.volume_down(amount)
     return "OK"
 
 @app.route("/vol/<int:volume>")
 def volume_set(volume):
-    controller.set_volume(volume)
+    wiim_device.set_volume(volume)
     return "OK"
 
 @app.route("/mute/on")
 def media_mute():
-    controller.mute()
+    wiim_device.mute()
     return "OK"
 
 @app.route("/mute/off")
 def media_unmute():
-    controller.unmute()
+    wiim_device.unmute()
     return "OK"
 
 @app.route("/mute/toggle")
 def media_mute_toggle():
-    controller.toggle_mute()
+    wiim_device.toggle_mute()
     return "OK"
-
-@app.route("/command/<path:command>")
-def run_command(command):
-    return controller.run_command(command)
-
 
 # Below here are the interesting commands
 
+@app.route('/scene', methods=['GET', 'POST'])
+def route_scene():
+    if request.method == 'GET':
+        return SceneController(wiim_device).get_current_scene()
+    else:
+        json_scene = request.get_json(force=True)
+        scenes = None
+        try:
+            if type(json_scene) is list:
+                if len(json_scene) == 0:
+                    return "provide at least one scene!", 400
+                scenes = list(map(WiimScene, json_scene))
+            else:
+                scenes = [WiimScene(json_scene)]
+        except ValidationError as e:
+            return "input error: {0}".format(e), 400
 
-@app.route('/scene/current')
-def current_scene():
-    player_status = controller.get_player_status()
-    player_output_state = controller.get_output_state()
-    player_airplay_speakers = None
-    if wiim_controller.parse_output_state(player_output_state) == "airplay":
-        player_airplay_speakers = controller.get_airplay_speakers()
+        try:
+            SceneController(wiim_device).set_scenes(scenes)
+        except ValidationError as e:
+            return "internal error: {0}".format(e), 500
 
-    return wiim_state.parse_current_state(player_status, player_output_state, player_airplay_speakers)
-
-@app.route("/output/toggle/<path:outputs_str>")
-def output_toggle(outputs_str):
-    outputs = outputs_str.split("/")
-    if len(outputs) <= 0:
-        return "No outputs specified", 400
-
-    current_input_mode = controller.get_input_mode()
-    current_output_mode = controller.get_output_mode()
-    current_idx = outputs.index(current_output_mode)
-    if current_idx is None:
-        current_idx = 0
-
-    next_idx = (current_idx + 1) % len(outputs)
-    wiim_output = outputs[next_idx]
-
-    spec = {
-        "output": wiim_output
-    }
-    scene = wiim_cmd_gen.SceneSpec(current_input_mode, current_output_mode, None, spec)
-    return run_scene(controller, scene)
+        return "OK", 200
 
 
-@app.route('/set/<path:specifier>')
-def set_specifier(specifier):
-    specifiers = specifier.split("/")
-    if len(specifiers) > 0 and len(specifiers) % 2 == 1:
-        return "invalid specifier", 400
-
-    specifiers = list(zip(specifiers[::2], specifiers[1::2])) # pair elements
-
-    scene = {
-        "input": None,
-        "output": None, 
-        "airplay_devices": None, # { name: string, volume: int }
-        "volume": None,
-    }
-
-    wiim_output = None
-    wiim_input = None
-
-    commands = {
-        "input": 1,
-        "output": 1,
-    }
-
-    for (cmd, dest) in specifiers:
-        if cmd == "input":
-            wiim_input = dest
-        elif cmd == "output":
-            wiim_output = dest
+@app.route('/scene/debug/<string:return_mode>', methods=['POST'])
+def debug_scene(return_mode):
+    json_scene = request.get_json(force=True)
+    scenes = None
+    try:
+        if type(json_scene) is list:
+            if len(json_scene) == 0:
+                return "provide at least one scene!", 400
+            scenes = list(map(WiimScene, json_scene))
         else:
-            return "unknown specifier command {0}".format(cmd), 400
+            scenes = [WiimScene(json_scene)]
+    except ValidationError as e:
+        return "input error: {0}".format(e), 400
 
-    current_input_mode = controller.get_input_mode()
-    current_output_mode = controller.get_output_mode()
-
-    spec = {
-        "input": wiim_input,
-        "output": wiim_output,
-    }
-    scene = wiim_cmd_gen.SceneSpec(current_input_mode, current_output_mode, None, spec)
-    return run_scene(controller, scene)
+    try:
+        return SceneController(wiim_device).set_scenes(scenes, dry_run=True, return_type=return_mode)
+    except Exception as e:
+        return "internal error: {0}".format(e), 500
 
 
-@app.route("/raw/scene/<path:scene>")
-def set_raw_scene(scene):
-    scene = wiim_scene.SceneSpec(controller, scene)
-    validated = scene.is_scene_valid()
-    if validated is not None:
-        print("invalid scene...")
-        return validated, 400
-    scene.set_scene()
-    return "OK"
+@app.route("/scenes", methods=['GET', 'POST'])
+def get_scenes():
+    if request.method == 'GET':
+        return SceneDb(get_scene_db_path()).list_all()
+    if request.method == 'POST':
+        try: 
+            scene_names = request.get_json(force=True)
+            db = SceneDb(get_scene_db_path())
+            scenes = list(map(db.load, scene_names))
+            SceneController(wiim_device).set_scenes(scenes)
+            return "OK"
+
+        except Exception as e:
+            return str(e), 500
+
+
+@app.route("/scenes/<string:name>", methods=['GET', 'POST', 'PUT'])
+def named_scene(name):
+    if request.method == 'GET':
+        try:
+            scene = SceneDb(get_scene_db_path()).load(name)
+            if type(scene) is list:
+                return json.dumps(list(map(lambda s:s.scene, scene)))
+            else:
+                return json.dumps(scene.scene)
+        except Exception as e:
+            return str(e), 400
+    elif request.method == 'POST':
+        json_scene = request.get_json(force=True)
+        scenes = None
+        if type(json_scene) is list:
+            if len(json_scene) == 0:
+                return "provide at least one scene!", 400
+            scenes = list(map(WiimScene, json_scene))
+        else:
+            scenes = WiimScene(json_scene)
+
+        SceneDb(get_scene_db_path()).save(name, scenes)
+
+        return "OK"
+    elif request.method == 'PUT':
+        scene = SceneDb(get_scene_db_path()).load(name)
+        SceneController(wiim_device).set_scenes(scene)
+        return "OK"
 

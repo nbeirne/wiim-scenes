@@ -3,7 +3,7 @@
 import time
 import json
 
-from ..util import json_normalizer
+from ..util import schema
 
 command_spec = {
     "type": "list",
@@ -26,8 +26,8 @@ command_spec = {
 }
 
 class CommandRunner:
-    def __init__(self, controller, commands):
-        self.controller = controller
+    def __init__(self, wiim_device, commands):
+        self.wiim_device = wiim_device
         self.commands = commands
         self.builtin_commands = {
             "sleep": lambda args: time.sleep(*args),
@@ -35,7 +35,7 @@ class CommandRunner:
         }
 
     def normalized_commands(self, commands):
-        return json_normalizer.normalize_data(command_spec, commands)
+        return schema.normalize_schema(command_spec, commands)
 
     def is_valid(self):
         commands = None
@@ -50,7 +50,7 @@ class CommandRunner:
 
             if cmd in self.builtin_commands: 
                 continue
-            if getattr(self.controller, cmd, None) is not None:
+            if getattr(self.wiim_device, cmd, None) is not None:
                 continue
 
             return "command not found: {0}".format(cmd)
@@ -66,7 +66,7 @@ class CommandRunner:
             if cmd in self.builtin_commands: 
                 self.builtin_commands[cmd](args)
             else:
-                func = getattr(self.controller, cmd)
+                func = getattr(self.wiim_device, cmd)
                 if func != None:
                     func(*args)
                 else:

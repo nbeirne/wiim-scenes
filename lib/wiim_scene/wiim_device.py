@@ -34,7 +34,7 @@ def parse_output_state(state):
     return state
 
 
-class WiimController:
+class WiimDevice:
     # https://www.wiimhome.com/pdf/HTTP%20API%20for%20WiiM%20Mini.pdf
     def __init__(self, ip, verbose=0):
         self.ip = ip

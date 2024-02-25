@@ -1,7 +1,7 @@
 from copy import deepcopy
 
-from . import wiim_controller
-from ..util import json_normalizer
+from . import wiim_device
+from ..util import schema
 
 # define what we expect state to look like.
 # side note: a state is a stricter version of a scene
@@ -36,19 +36,15 @@ state_spec = {
                     "items": {
                         "type": "dict",
                         "keys": {
-                            "id": {
-                                "type": "str",
-                                "required": True,
-                            },
-                            "type": {
-                                "type": "str",
-                                "required": True,
-                            },
                             "device": {
                                 "type": "str",
                                 "required": True,
                             },
                             "name": {
+                                "type": "str",
+                                "required": True,
+                            },
+                            "id": {
                                 "type": "str",
                                 "required": True,
                             },
@@ -68,6 +64,11 @@ state_spec = {
     },
 }
 
+class WiimState:
+    def __init__(self, player_status, player_output_state, player_airplay_speakers):
+        self.state = parse_current_state(self, player_status, player_output_state, player_airplay_speakers)
+
+
 # current scene creation from external info
 
 def parse_current_state(player_status, player_output_state, player_airplay_speakers=None):
@@ -75,18 +76,18 @@ def parse_current_state(player_status, player_output_state, player_airplay_speak
         "status": player_status["status"],
         "volume": int(player_status["vol"]),
         "input": {
-            "mode": wiim_controller.parse_input_mode(player_status["mode"])
+            "mode": wiim_device.parse_input_mode(player_status["mode"])
         },
         "output": {
-            "mode": wiim_controller.parse_output_state(player_output_state),
+            "mode": wiim_device.parse_output_state(player_output_state),
             **create_airplay_list(player_output_state, player_airplay_speakers)
         },
     }
 
-    return json_normalizer.normalize_data(state_spec, state) # validate that we produced a proper state
+    return schema.normalize_schema(state_spec, state) # validate that we produced a proper state
 
 def filter_airplay_info(airplay_device):
-    airplay_device_keys = set(["id", "type", "device", "name", "selected", "volume" ])
+    airplay_device_keys = set(["id", "device", "name", "selected", "volume" ])
 
     airplay_device = deepcopy(airplay_device)
     keys_to_remove = set(airplay_device.keys()) - airplay_device_keys

@@ -1,12 +1,12 @@
 
 import unittest
 
-from ..json_normalizer import normalize_data, ValidationError
+from ..schema import normalize_schema, ValidationError
 
 
 class TestJsonNormalizer(unittest.TestCase):
     def run_test(self, spec, data, expected):
-        result = normalize_data(spec, data)
+        result = normalize_schema(spec, data)
         self.assertEqual(result, expected)
 
     def test_allow_single_item_with_none_is_none(self):
@@ -16,7 +16,7 @@ class TestJsonNormalizer(unittest.TestCase):
         data = None
         expected = None
 
-        self.assertEqual(normalize_data(spec, data), expected)
+        self.assertEqual(normalize_schema(spec, data), expected)
 
     def test_none_value_does_not_collapse(self):
         spec = {
@@ -28,7 +28,7 @@ class TestJsonNormalizer(unittest.TestCase):
         data = { "a": None }
         expected = { "a": None }
 
-        self.assertEqual(normalize_data(spec, data), expected)
+        self.assertEqual(normalize_schema(spec, data), expected)
 
 
     def test_none_value_does_not_collapse_with_single_item(self):
@@ -42,7 +42,7 @@ class TestJsonNormalizer(unittest.TestCase):
         data = { "a": None }
         expected = { "a": None }
 
-        self.assertEqual(normalize_data(spec, data), expected)
+        self.assertEqual(normalize_schema(spec, data), expected)
 
 
     def test_dict_default_key(self):
@@ -52,7 +52,7 @@ class TestJsonNormalizer(unittest.TestCase):
         }
         data = "test"
         expected = { "d": "test" }
-        self.assertEqual(normalize_data(spec, data), expected)
+        self.assertEqual(normalize_schema(spec, data), expected)
 
 
     def test_dict_override_default_value(self):
@@ -63,7 +63,7 @@ class TestJsonNormalizer(unittest.TestCase):
         }
         data = { "d": "a"}
         expected = { "d": "a" }
-        self.assertEqual(normalize_data(spec, data), expected)
+        self.assertEqual(normalize_schema(spec, data), expected)
 
     def test_dict_default_value(self):
         spec = {
@@ -73,7 +73,7 @@ class TestJsonNormalizer(unittest.TestCase):
         }
         data = {}
         expected = { "d": "dv" }
-        self.assertEqual(normalize_data(spec, data), expected)
+        self.assertEqual(normalize_schema(spec, data), expected)
 
 
 
@@ -85,27 +85,27 @@ class TestJsonNormalizer(unittest.TestCase):
         }
         data = None
         expected = { "d": "v" }
-        self.assertEqual(normalize_data(spec, data), expected)
+        self.assertEqual(normalize_schema(spec, data), expected)
 
 
     def test_list_allow_single_item(self):
         spec = { "allow_single_item": True }
         data = 1
         expected = [1]
-        self.assertEqual(normalize_data(spec, data), expected)
+        self.assertEqual(normalize_schema(spec, data), expected)
 
     def test_list_default_value(self):
         spec = { "default_value": [] }
         data = None
         expected = []
-        self.assertEqual(normalize_data(spec, data), expected)
+        self.assertEqual(normalize_schema(spec, data), expected)
 
 
     def test_list_default_value_single_item(self):
         spec = { "default_value": [], "allow_single_item": True }
         data = None
         expected = []
-        self.assertEqual(normalize_data(spec, data), expected)
+        self.assertEqual(normalize_schema(spec, data), expected)
 
     def test_list_processes_items(self):
         spec = { 
@@ -115,10 +115,10 @@ class TestJsonNormalizer(unittest.TestCase):
         }
         data = [1,2,3]
         expected = [1,2,3]
-        self.assertEqual(normalize_data(spec, data), expected)
+        self.assertEqual(normalize_schema(spec, data), expected)
 
         data = ["a", "b", "c"]
-        self.assertRaises(ValidationError, normalize_data, spec, data)
+        self.assertRaises(ValidationError, normalize_schema, spec, data)
 
 
     def nested_default_keys_and_values(self):
@@ -133,31 +133,31 @@ class TestJsonNormalizer(unittest.TestCase):
         }
         data = None
         expected = { "d": { "i": "hello" } }
-        self.assertEqual(normalize_data(spec, data), expected)
+        self.assertEqual(normalize_schema(spec, data), expected)
 
     def test_typecheck(self):
-        self.assertEqual(normalize_data({ "type": "str" }, "hello"), "hello")
-        self.assertEqual(normalize_data({ "type": "int" }, 0), 0)
-        self.assertEqual(normalize_data({ "type": "dict" }, {}), {})
-        self.assertEqual(normalize_data({ "type": "list" }, []), [])
+        self.assertEqual(normalize_schema({ "type": "str" }, "hello"), "hello")
+        self.assertEqual(normalize_schema({ "type": "int" }, 0), 0)
+        self.assertEqual(normalize_schema({ "type": "dict" }, {}), {})
+        self.assertEqual(normalize_schema({ "type": "list" }, []), [])
 
-        self.assertRaises(ValidationError, normalize_data, { "type": "int" }, "hello")
-        self.assertRaises(ValidationError, normalize_data, { "type": "str" }, 0)
-        self.assertRaises(ValidationError, normalize_data, { "type": "list" }, {})
-        self.assertRaises(ValidationError, normalize_data, { "type": "dict" }, [])
+        self.assertRaises(ValidationError, normalize_schema, { "type": "int" }, "hello")
+        self.assertRaises(ValidationError, normalize_schema, { "type": "str" }, 0)
+        self.assertRaises(ValidationError, normalize_schema, { "type": "list" }, {})
+        self.assertRaises(ValidationError, normalize_schema, { "type": "dict" }, [])
 
     def test_required(self):
-        self.assertEqual(normalize_data({ "required": True }, "hello"), "hello")
+        self.assertEqual(normalize_schema({ "required": True }, "hello"), "hello")
 
-        self.assertRaises(ValidationError, normalize_data, { "required": True }, None)
+        self.assertRaises(ValidationError, normalize_schema, { "required": True }, None)
 
         spec = {
             "keys": {
                 "a": { "required": True }
              }
         }
-        self.assertRaises(ValidationError, normalize_data, spec, {})
-        self.assertEqual(normalize_data(spec, { "a": 0 }), { "a": 0 })
+        self.assertRaises(ValidationError, normalize_schema, spec, {})
+        self.assertEqual(normalize_schema(spec, { "a": 0 }), { "a": 0 })
 
     def test_parse(self):
         spec = {
@@ -182,7 +182,7 @@ class TestJsonNormalizer(unittest.TestCase):
 
         data = [ { "cmd": "a", "args": ["A", 1] } ]
         expected = [ { "cmd": "a", "args": ["A", 1] } ]
-        self.assertEqual(normalize_data(spec, data), expected)
+        self.assertEqual(normalize_schema(spec, data), expected)
 
 
     def test_complex(self):

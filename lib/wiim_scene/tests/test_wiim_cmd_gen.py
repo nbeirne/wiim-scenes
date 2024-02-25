@@ -8,8 +8,8 @@ class TestModule(unittest.TestCase):
   def get_commands(self, curr_in, curr_out, dest_in, dest_out):
       curr_state = self.create_state(curr_in, curr_out)
       dest_scene = self.create_scene(dest_in, dest_out)
-      dest_state = wiim_scene.apply_scene_over_state(curr_state, dest_scene)
-      spec_scene = wiim_cmd_gen.SceneSpec(curr_state, dest_state)
+      dest_state = dest_scene.apply_scene_over_state(curr_state)
+      spec_scene = wiim_cmd_gen.WiimStateSwitchCommandGenerator(curr_state, dest_state)
       spec_scene_c = spec_scene.get_commands()
       return spec_scene_c
 
@@ -19,10 +19,10 @@ class TestModule(unittest.TestCase):
           json_scene["input"] = dest_in
       if dest_out is not None:
           json_scene["output"] = dest_out
-      return wiim_scene.normalize_scene(json_scene)
+      return wiim_scene.WiimScene(json_scene)
 
   def create_state(self, curr_in, curr_out):
-      return {"input": { "mode": curr_in }, "output": { "mode": curr_out }}
+      return { "volume": 0, "input": { "mode": curr_in }, "output": { "mode": curr_out } }
 
   def create_ap_state(self, curr_in, curr_out, selected_list):
       apd = []
@@ -30,6 +30,7 @@ class TestModule(unittest.TestCase):
         apd.append({ "id": str(idx), "name": "n0", "type": "t", "device": "d", "selected": sel,  "volume": 50 })
 
       curr_state = {
+        "volume": 0,
         "input": { "mode": curr_in },
         "output": {
           "mode": curr_out,
@@ -40,7 +41,7 @@ class TestModule(unittest.TestCase):
 
 
   def run_test(self, curr_in, curr_out, dest_in, dest_out, expected):
-      curr_state = {"input": { "mode": curr_in }, "output": { "mode": curr_out }}
+      curr_state = { "volume": 0, "input": { "mode": curr_in }, "output": { "mode": curr_out }}
       json_scene = {}
 
       if dest_in is not None:
@@ -48,10 +49,10 @@ class TestModule(unittest.TestCase):
       if dest_out is not None:
           json_scene["output"] = dest_out
 
-      dest_scene = wiim_scene.normalize_scene(json_scene)
-      dest_state = wiim_scene.apply_scene_over_state(curr_state, dest_scene)
+      dest_scene = wiim_scene.WiimScene(json_scene)
+      dest_state = dest_scene.apply_scene_over_state(curr_state)
 
-      spec_scene = wiim_cmd_gen.SceneSpec(curr_state, dest_state)
+      spec_scene = wiim_cmd_gen.WiimStateSwitchCommandGenerator(curr_state, dest_state)
       spec_scene_c = spec_scene.get_commands()
 
       msg = "Failed with {0} {1} {2} {3}".format(curr_in, curr_out, dest_in, dest_out)
@@ -147,8 +148,8 @@ class TestModule(unittest.TestCase):
     curr_state = self.create_ap_state("optical", "line-out", [False])
     dest_scene = self.create_scene("optical", { "mode": "airplay", "airplay": { "selected": True }})
 
-    dest_state = wiim_scene.apply_scene_over_state(curr_state, dest_scene)
-    spec_scene = wiim_cmd_gen.SceneSpec(curr_state, dest_state)
+    dest_state = dest_scene.apply_scene_over_state(curr_state)
+    spec_scene = wiim_cmd_gen.WiimStateSwitchCommandGenerator(curr_state, dest_state)
     spec_scene_c = spec_scene.get_commands()
 
     self.assertEqual([{"cmd": "enable_wireless_speaker", "args": "0", "meta": "n0" }], spec_scene_c)
@@ -157,8 +158,8 @@ class TestModule(unittest.TestCase):
     curr_state = self.create_ap_state("optical", "airplay", [False])
     dest_scene = self.create_scene("optical", { "mode": "airplay", "airplay": { "selected": True }})
 
-    dest_state = wiim_scene.apply_scene_over_state(curr_state, dest_scene)
-    spec_scene = wiim_cmd_gen.SceneSpec(curr_state, dest_state)
+    dest_state = dest_scene.apply_scene_over_state(curr_state)
+    spec_scene = wiim_cmd_gen.WiimStateSwitchCommandGenerator(curr_state, dest_state)
     spec_scene_c = spec_scene.get_commands()
 
     self.assertEqual([{"cmd": "enable_wireless_speaker", "args": "0", "meta": "n0" }], spec_scene_c)
