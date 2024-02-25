@@ -2,9 +2,9 @@ import json
 
 from ..util.command_runner import CommandRunner
 
-from .wiim_cmd_gen         import WiimStateSwitchCommandGenerator
-from .                     import wiim_device 
-from .                     import wiim_state
+from .wiim_cmd_gen import WiimStateSwitchCommandGenerator
+from .             import wiim_device 
+from .             import wiim_state
 
 class SceneController:
     def __init__(self, wiim_device):
@@ -30,11 +30,11 @@ class SceneController:
             scene = scenes[0]
         else:
             for idx,scene in enumerate(scenes):
-                if scene.does_state_match(current_state):
+                if current_state.does_scene_match(scene):
                     scene = scenes[(idx+1) % len(scenes)]
                     break
 
-        new_state = scene.apply_scene_over_state(current_state)
+        new_state = current_state.apply_scene(scene)
         commands = WiimStateSwitchCommandGenerator(current_state, new_state).get_commands()
 
         if verbose:

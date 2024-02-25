@@ -2,7 +2,7 @@
 
 class WiimStateSwitchCommandGenerator:
     def __init__(self, curr_state, dest_state):
-        self.curr_state = curr_state
+        self.curr_state = curr_state.state
         self.dest_state = dest_state
 
     def is_scene_valid(self):
@@ -79,6 +79,7 @@ class WiimStateSwitchCommandGenerator:
                     commands += input_commands
 
         elif output_mode == "airplay":
+            require_pause = True
             # Always process airplay changes
             if "airplay" in self.curr_state["output"] and "airplay" in self.dest_state["output"]:
                 commands += self.process_airplay_changes(self.curr_state["output"]["airplay"], self.dest_state["output"]["airplay"])

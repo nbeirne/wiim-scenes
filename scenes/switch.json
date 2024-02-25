@@ -7,9 +7,9 @@
         "output": {
             "mode": "airplay",
             "airplay": [
-                { "name": "Symphonisk", "selected": true, "volume": 20 },
-                { "name": "Kitchen", "volume": 40 },
-                { "name": "Sunroom", "volume": 30 }
+                { "name": "Symphonisk", "volume": 40 },
+                { "name": "Kitchen", "volume": 50 },
+                { "name": "Sunroom", "volume": 44 }
             ]
         }
     }

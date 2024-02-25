@@ -31,6 +31,38 @@ def get_wiim_ip():
     return wiim_ip_addr
 
 
+def load_file_scenes(filenames):
+    if type(filenames) is not list:
+        filenames = [filenames]
+
+    scenes = []
+
+    for filename in filenames:
+        with open(filename, "r") as f:
+            json_scene = json.load(f)
+            if type(json_scene) is list:
+                scenes += list(map(WiimScene, json_scene))
+            else:
+                scenes += [WiimScene(json_scene)]
+
+    return scenes
+
+def load_json_scenes(input_strs):
+    if type(input_strs) is not list:
+        input_strs = [input_strs]
+
+    scenes = []
+
+    for input_str in input_strs:
+        json_scene = json.loads(input_str)
+        if type(json_scene) is list:
+            scenes += list(map(WiimScene, json_scene))
+        else:
+            scenes += [WiimScene(json_scene)]
+
+    return scenes
+
+
 if __name__ == "__main__":
     args = vars(parser.parse_args())
 
@@ -44,20 +76,21 @@ if __name__ == "__main__":
         exit(0)
 
 
-    scenes = list(map(json.loads, args["scene"])) if args["scene"] is not None else []
 
-    if args["filename"] is not None:
-        for fn in args["filename"]:
-            with open(fn) as file:
-                json_scene = json.load(file)
-                scenes.append(json_scene)
+    try:
+        scenes = []
 
-    if len(scenes) > 0:
-        try:
-            scenes = list(map(WiimScene, scenes))
+        if args["scene"] is not None:
+            scenes += load_json_scenes(args["scene"])
+
+        if args["filename"] is not None:
+            scenes += load_file_scenes(args["filename"])
+
+        print(scenes)
+        if len(scenes) > 0:
             scene_controller.set_scenes(scenes, dry_run=dry_run, verbose=verbose)
-        except ValidationError as e:
-            print("input error: {0}".format(e))
-    else:
-        print("No scenes provided")
+        else:
+            print("No scenes provided")
+    except ValidationError as e:
+        print("input error: {0}".format(e))
 

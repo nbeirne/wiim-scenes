@@ -13,6 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN mkdir -p /app/lib
 COPY ./lib /app/lib
 COPY ./server.py /app
+COPY ./.scenes /app
 
 # Expose the application port
 EXPOSE 5000

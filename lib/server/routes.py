@@ -35,11 +35,11 @@ wiim_device = WiimDevice(wiim_ip_addr, verbose=True)
 app = Flask(__name__)
 
 
-# TODO: use object for WiimState (move some scene methods to State).
-# TODO: refactor: auto normalize scenes, commands, and states
+# TODO: simplify access of state/scene.
 
+# TODO: figure out how to handle lists of scenes. 
+    # - in routeing? in db? in SceneController?
 
-# TODO: pause before changing airplay speakers
 # TODO: only pause if media is playing OR changing outputs AND playing audio
 
 
@@ -146,6 +146,7 @@ def media_mute_toggle():
 
 # Below here are the interesting commands
 
+
 @app.route('/scene', methods=['GET', 'POST'])
 def route_scene():
     if request.method == 'GET':
@@ -229,8 +230,6 @@ def named_scene(name):
         json_scene = request.get_json(force=True)
         scenes = None
         if type(json_scene) is list:
-            if len(json_scene) == 0:
-                return "provide at least one scene!", 400
             scenes = list(map(WiimScene, json_scene))
         else:
             scenes = WiimScene(json_scene)
@@ -239,7 +238,7 @@ def named_scene(name):
 
         return "OK"
     elif request.method == 'PUT':
-        scene = SceneDb(get_scene_db_path()).load(name)
-        SceneController(wiim_device).set_scenes(scene)
+        scenes = SceneDb(get_scene_db_path()).load(name)
+        SceneController(wiim_device).set_scenes(scenes)
         return "OK"
 
