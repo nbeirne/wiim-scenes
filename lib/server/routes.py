@@ -198,8 +198,15 @@ def get_scenes():
     if request.method == 'POST':
         try: 
             scene_names = request.get_json(force=True)
+            if type(scene_names) is not list:
+                scene_names = [scene_names]
             db = SceneDb(get_scene_db_path())
-            scenes = list(map(db.load, scene_names))
+            scenes = [ 
+                scene 
+                for scene_name in scene_names
+                for scene in db.load(scene_name) 
+            ]
+            print(scenes)
             SceneController(wiim_device).set_scenes(scenes)
             return "OK"
 
