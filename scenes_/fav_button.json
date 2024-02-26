@@ -1,0 +1,16 @@
+[
+    {
+        "volume": 40,
+        "output": "line-out"
+    },
+    {
+        "output": {
+            "mode": "airplay",
+            "airplay": [
+                { "name": "Symphonisk", "volume": 40 },
+                { "name": "Kitchen", "volume": 50 },
+                { "name": "Sunroom", "volume": 44 }
+            ]
+        }
+    }
+]

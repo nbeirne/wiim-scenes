@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-c', '--current', action='store_true')
 parser.add_argument('-f', '--filename', action='append', nargs='?')
 parser.add_argument('-s', '--scene', action='append', nargs='?')
-parser.add_argument('-d', '--dry_run', action='store_true')
+parser.add_argument('-d', '--dry-run', action='store_true')
 parser.add_argument('-v', '--verbose', action='count', default=0)
 
 verbose=0
@@ -72,10 +72,8 @@ if __name__ == "__main__":
     scene_controller = SceneController(wiim_device)
 
     if args["current"] == True:
-        print(json.dumps(scene_controller.get_current_scene(fetch_airplay=True)))
+        print(json.dumps(scene_controller.get_current_scene(fetch_airplay=True).state))
         exit(0)
-
-
 
     try:
         scenes = []
@@ -86,7 +84,6 @@ if __name__ == "__main__":
         if args["filename"] is not None:
             scenes += load_file_scenes(args["filename"])
 
-        print(scenes)
         if len(scenes) > 0:
             scene_controller.set_scenes(scenes, dry_run=dry_run, verbose=verbose)
         else:

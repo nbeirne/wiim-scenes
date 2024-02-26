@@ -38,9 +38,9 @@ class SceneController:
         commands = WiimStateSwitchCommandGenerator(current_state, new_state).get_commands()
 
         if verbose:
-            print("curr state: {0}".format(json.dumps(current_state, indent=2)))
+            print("curr state: {0}".format(json.dumps(current_state.state, indent=2)))
             print("set scene:  {0}".format(json.dumps(scene.scene, indent=2)))
-            print("dest state: {0}".format(json.dumps(new_state, indent=2)))
+            print("dest state: {0}".format(json.dumps(new_state.state, indent=2)))
             print("commands:   {0}".format(json.dumps(commands, indent=2)))
 
         if not dry_run:

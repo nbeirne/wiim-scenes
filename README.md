@@ -14,6 +14,17 @@ Using this has several benefits over using the Wiim api directly:
 
 ## Set Up 
 
+### CLI
+
+There is a command line interface. Usage:
+```
+> export WIIM_IP_ADDR="<ip>"
+> ./wiim_scene.py --current
+> ./wiim_scene.py [-f <scene json file>] [-s <scene json>] [--dry-run] [--verbose]
+```
+
+### Server Interface
+
 There are several ways to run the server. 
 - Docker (see the Makefile for an example setup)
 - On your machine (also see the Makefile to install deps and running the dev environment)
@@ -22,8 +33,9 @@ Essentially:
 ```
 > export WIIM_IP_ADDR="<ip>"
 > pip install --no-cache-dir -r requirements.txt
-> flask --app ./app/flask_server.py run 
+> flask --app ./server.py run 
 ```
+
 
 
 ## Usage
@@ -57,7 +69,7 @@ You may also POST a list of scenes to the scene endpoint. If a match to the curr
 
 
 #### Scenes
-A scene schema exists in lib/wiim_scene/wiim_scene.py. Any of the parameters may be omitted.
+A scene schema exists in lib/wiim_scene/wiim_scene.py. Any of the parameters may be omitted. There are several examples in the ./scenes directory.
 ```
 {
     "volume": number,
