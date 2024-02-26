@@ -37,7 +37,7 @@ Essentially:
 ```
 
 ## Scenes
-A scene schema exists in lib/wiim_scene/wiim_scene.py. Any of the parameters may be omitted. There are several examples in the ./scenes directory.
+A scene schema exists in [wiim_scene.py](lib/wiim_scene/wiim_scene.py). Any of the parameters may be omitted. There are several examples in the [scenes](./scenes) directory.
 ```
 {
     "volume": number,
