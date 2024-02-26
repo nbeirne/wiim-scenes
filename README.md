@@ -70,7 +70,7 @@ These scenes can be annoying to write. There are shortcuts to writing them.
 3. If outputing to airplay and there is no airplay dictionary, it defaults to selecting all airplay devices.
 4. An airplay device list may just use the name, instead of specifying a full dictionary. Example: `{ "output": { "mode": "airplay", "airplay": ["device1", "device2"] }`
 
-Any place which takes a Scene as input may also take a list of scenes. If the current state matches the inputs/outputs of a scene in the list, it will rotate through to he next scene. Volume settings are ignored for now.
+Any place which takes a Scene as input may also take a list of scenes. If the current state matches the inputs/outputs of a scene in the list, it will rotate through to the next scene. Volume settings are ignored for now.
 
 ### Supported inputs:
 ```
