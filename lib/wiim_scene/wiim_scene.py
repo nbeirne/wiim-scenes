@@ -29,6 +29,7 @@ scene_spec = {
                 },
                 "airplay": {
                     "type": "list",
+                    "default_value": {}, # this is put into a list, then populated with { "selected": true }
                     "allow_single_item": True,
                     "items": {
                         "type": "dict",

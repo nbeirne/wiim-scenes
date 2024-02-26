@@ -12,21 +12,36 @@ def make_sure_path_exists(path):
         if exception.errno != errno.EEXIST:
             raise
 
+def load_scenes_from_json(json_scene):
+    if type(json_scene) is list:
+        return list(map(WiimScene, json_scene))
+    else:
+        return [WiimScene(json_scene)]
+
 class SceneDb:
     def __init__(self, scene_dir):
         self.scene_dir = scene_dir
         make_sure_path_exists(scene_dir)
 
+
+    def save_json(self, name, json_scene):
+        # do a quick validation before saving
+        load_scenes_from_json(json_scene)
+        self.save(name, json_scene)
+
     def save(self, name, scene):
         with open("{0}/{1}.json".format(self.scene_dir, name), "w") as f:
             scenes = None
             if type(scene) is list:
-                scenes = list(map(lambda s: s.scene, scene))
+                scenes = list(map(lambda s: s, scene))
             else:
                 scenes = scene.scene
             json.dump(scenes, f)
 
     def load(self, names):
+        if type(names) is str:
+            names = [names]
+
         scenes = []
 
         for name in names:

@@ -47,7 +47,7 @@ class SceneController:
             command_runner = CommandRunner(self.wiim_device, commands)
             command_runner.run()
 
-        if return_type == "state":
+        if return_type == "state" or return_type == "scene":
             return new_state
         elif return_type == "cmd":
             return commands

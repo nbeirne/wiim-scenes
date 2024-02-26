@@ -2,6 +2,7 @@
 
 import os
 import json
+import traceback
 
 from flask import Flask
 from flask import request
@@ -12,36 +13,14 @@ from ..wiim_scene.wiim_device      import WiimDevice
 from ..wiim_scene.wiim_scene       import WiimScene
 from ..wiim_scene.scene_controller import SceneController
 
-from .scene_db import SceneDb
-
-def get_wiim_ip():
-    if not "WIIM_IP_ADDR" in os.environ:
-        return None
-    wiim_ip_addr = os.environ["WIIM_IP_ADDR"]
-    return wiim_ip_addr
-
-def get_scene_db_path():
-    if not "WIIM_SCENE_DB_PATH" in os.environ:
-        return ".scenes"
-    wiim_scene_db_path = os.environ["WIIM_SCENE_DB_PATH"]
-    return wiim_scene_db_path
-
-wiim_ip_addr = get_wiim_ip()
-if wiim_ip_addr is None:
-    print("You must set WIIM_IP_ADDR in the environment")
-    exit(1)
-
-wiim_device = WiimDevice(wiim_ip_addr, verbose=True)
-app = Flask(__name__)
+from .scene_db import SceneDb, load_scenes_from_json
 
 
-# TODO: simplify access of state/scene.
+# TODO: simplify access of the internals to state/scene.
+# TODO: make a Scene a subclass of state, or vice versa
 
-# TODO: figure out how to handle lists of scenes. 
-    # - in routeing? in db? in SceneController?
-
-# TODO: only pause if media is playing OR changing outputs AND playing audio
-
+# TODO: use comparison operator for checking if a scene matches a state
+    # ie, run the merge then equality check it.
 
 ####
 
@@ -79,6 +58,29 @@ app = Flask(__name__)
 # volume/down/<int>
 # volume/<int>
 #
+
+
+def get_wiim_ip():
+    if not "WIIM_IP_ADDR" in os.environ:
+        return None
+    wiim_ip_addr = os.environ["WIIM_IP_ADDR"]
+    return wiim_ip_addr
+
+def get_scene_db_path():
+    if not "WIIM_SCENE_DB_PATH" in os.environ:
+        return ".scenes"
+    wiim_scene_db_path = os.environ["WIIM_SCENE_DB_PATH"]
+    return wiim_scene_db_path
+
+wiim_ip_addr = get_wiim_ip()
+if wiim_ip_addr is None:
+    print("You must set WIIM_IP_ADDR in the environment")
+    exit(1)
+
+
+wiim_device = WiimDevice(wiim_ip_addr, verbose=True)
+app = Flask(__name__)
+
 
 
 # backwards compatibility with the Wiim API
@@ -144,25 +146,26 @@ def media_mute_toggle():
     wiim_device.toggle_mute()
     return "OK"
 
+
 # Below here are the interesting commands
 
 
 @app.route('/scene', methods=['GET', 'POST'])
 def route_scene():
     if request.method == 'GET':
-        return SceneController(wiim_device).get_current_scene()
+        state = SceneController(wiim_device).get_current_scene()
+        return json.dumps(state.state)
+
     else:
         json_scene = request.get_json(force=True)
         scenes = None
         try:
-            if type(json_scene) is list:
-                if len(json_scene) == 0:
-                    return "provide at least one scene!", 400
-                scenes = list(map(WiimScene, json_scene))
-            else:
-                scenes = [WiimScene(json_scene)]
+            scenes = load_scenes_from_json(json_scene)
         except ValidationError as e:
             return "input error: {0}".format(e), 400
+
+        if len(scenes) == 0:
+            return "provide at least one scene!", 400
 
         try:
             SceneController(wiim_device).set_scenes(scenes)
@@ -177,68 +180,71 @@ def debug_scene(return_mode):
     json_scene = request.get_json(force=True)
     scenes = None
     try:
-        if type(json_scene) is list:
-            if len(json_scene) == 0:
-                return "provide at least one scene!", 400
-            scenes = list(map(WiimScene, json_scene))
-        else:
-            scenes = [WiimScene(json_scene)]
+        scenes = load_scenes_from_json(json_scene)
     except ValidationError as e:
         return "input error: {0}".format(e), 400
 
+    if len(scenes) == 0:
+        return "provide at least one scene!", 400
+
     try:
-        return SceneController(wiim_device).set_scenes(scenes, dry_run=True, return_type=return_mode)
+        return json.dumps(SceneController(wiim_device).set_scenes(scenes, dry_run=True, return_type=return_mode))
+    except ValueError as e:
+        return "input error: {0}".format(e), 400
     except Exception as e:
         return "internal error: {0}".format(e), 500
+
 
 
 @app.route("/scenes", methods=['GET', 'POST'])
 def get_scenes():
     if request.method == 'GET':
-        return SceneDb(get_scene_db_path()).list_all()
+        return json.dumps(SceneDb(get_scene_db_path()).list_all())
+
     if request.method == 'POST':
         try: 
-            scene_names = request.get_json(force=True)
-            if type(scene_names) is not list:
-                scene_names = [scene_names]
             db = SceneDb(get_scene_db_path())
-            scenes = [ 
-                scene 
-                for scene_name in scene_names
-                for scene in db.load(scene_name) 
-            ]
-            print(scenes)
+            scene_names = request.data.decode('ascii')
+            try:
+                scene_names = json.loads(scene_names)
+            except json.JSONDecodeError:
+                pass
+
+            scenes = db.load(scene_names)
             SceneController(wiim_device).set_scenes(scenes)
+
             return "OK"
 
         except Exception as e:
+            print(traceback.format_exc())
             return str(e), 500
-
 
 @app.route("/scenes/<string:name>", methods=['GET', 'POST', 'PUT'])
 def named_scene(name):
     if request.method == 'GET':
         try:
-            scene = SceneDb(get_scene_db_path()).load(name)
-            if type(scene) is list:
-                return json.dumps(list(map(lambda s:s.scene, scene)))
-            else:
-                return json.dumps(scene.scene)
+            scenes = SceneDb(get_scene_db_path()).load(name)
+            return json.dumps(list(map(lambda s:s.scene, scenes)))
         except Exception as e:
             return str(e), 400
+
     elif request.method == 'POST':
         json_scene = request.get_json(force=True)
-        scenes = None
-        if type(json_scene) is list:
-            scenes = list(map(WiimScene, json_scene))
-        else:
-            scenes = WiimScene(json_scene)
-
-        SceneDb(get_scene_db_path()).save(name, scenes)
-
+        SceneDb(get_scene_db_path()).save_json(name, json_scene)
         return "OK"
+
     elif request.method == 'PUT':
         scenes = SceneDb(get_scene_db_path()).load(name)
         SceneController(wiim_device).set_scenes(scenes)
         return "OK"
+
+@app.route("/scenes/<string:name>/debug/<string:return_mode>", methods=['GET'])
+def debug_named_scene(name, return_mode):
+    try:
+        scenes = SceneDb(get_scene_db_path()).load(name)
+        return json.dumps(SceneController(wiim_device).set_scenes(scenes, dry_run=True, return_type=return_mode))
+    except ValueError as e:
+        return "input error: {0}".format(e), 400
+    except Exception as e:
+        return "internal error: {0}".format(e), 500
 

@@ -4,7 +4,7 @@ deps:
 	pip install --no-cache-dir -r requirements.txt
 
 dev:
-	flask --app ./app/flask_server.py run --reload
+	flask --app ./server.py run --reload
 
 test:
 	python3 -m unittest
