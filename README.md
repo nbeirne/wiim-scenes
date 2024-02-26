@@ -6,11 +6,11 @@ This is proxy server meant to sit between any of your exising Home automation an
 
 
 Using this has several benefits over using the Wiim api directly:
+- Scenes. You may set up scenes of inputs, outputs, and volumes and switch between them.
 - This supports output switching.
 - Support media mute toggling and volume stepping.
 - The API is less obtuse.
-- It uses HTTP instead of a self-signed HTTPS certificate. 
-
+- It uses HTTP instead of a self-signed HTTPS certificate.
 
 ## Set Up 
 
@@ -23,7 +23,7 @@ There is a command line interface. Usage:
 > ./wiim_scene.py [-f <scene json file>] [-s <scene json>] [--dry-run] [--verbose]
 ```
 
-### Server Interface
+### REST Server Interface
 
 There are several ways to run the server. 
 - Docker (see the Makefile for an example setup)
@@ -36,39 +36,7 @@ Essentially:
 > flask --app ./server.py run 
 ```
 
-
-
-## Usage
-
-### Controlling Playback
-```
-curl http://$ip:$port/media/play
-curl http://$ip:$port/media/pause
-curl http://$ip:$port/media/toggle
-```
-
-### Volume and Muting
-```
-curl http://$ip:$port/vol/up
-curl http://$ip:$port/vol/up/$increment
-curl http://$ip:$port/vol/down
-curl http://$ip:$port/vol/down/$increment
-curl http://$ip:$port/vol/$volume # volume is between 0 and 100
-
-curl http://$ip:$port/mute/on
-curl http://$ip:$port/mute/off
-curl http://$ip:$port/mute/toggle
-```
-
-### Setting Scenes and Outputs
-```
-curl http://$ip:$port/scene # GET to get the current scene. POST with a scene JSON to set a scene.
-```
-
-You may also POST a list of scenes to the scene endpoint. If a match to the current state exists in that list, it rotates to the next scene.
-
-
-#### Scenes
+## Scenes
 A scene schema exists in lib/wiim_scene/wiim_scene.py. Any of the parameters may be omitted. There are several examples in the ./scenes directory.
 ```
 {
@@ -103,12 +71,42 @@ These scenes can be annoying to write. There are shortcuts to writing them.
 4. An airplay device list may just use the name, instead of specifying a full dictionary. Example: `{ "output": { "mode": "airplay", "airplay": ["device1", "device2"] }`
 
 
-#### Supported inputs:
+### Supported inputs:
 ```
 line-in
 optical
 airplay # in some circumstances. Airplay cannot be started really.
 ```
+
+
+## REST Usage
+
+### Controlling Playback
+```
+curl http://$ip:$port/media/play
+curl http://$ip:$port/media/pause
+curl http://$ip:$port/media/toggle
+```
+
+### Volume and Muting
+```
+curl http://$ip:$port/vol/up
+curl http://$ip:$port/vol/up/$increment
+curl http://$ip:$port/vol/down
+curl http://$ip:$port/vol/down/$increment
+curl http://$ip:$port/vol/$volume # volume is between 0 and 100
+
+curl http://$ip:$port/mute/on
+curl http://$ip:$port/mute/off
+curl http://$ip:$port/mute/toggle
+```
+
+### Setting Scenes and Outputs
+```
+curl http://$ip:$port/scene # GET to get the current scene. POST with a scene JSON to set a scene.
+```
+
+You may also POST a list of scenes to the scene endpoint. If a match to the current state exists in that list, it rotates to the next scene.
 
 ### Commands
 This API is backwards compatible with the Wiim API. There is also a more convenient endpoint which is equivalent.
@@ -117,7 +115,6 @@ This API is backwards compatible with the Wiim API. There is also a more conveni
 curl http://$ip:$port/httpapi.asp?command=$command
 curl http://$ip:$port/command/$command
 ```
-
 
 ## Limitations
 This server is a personal project. I have TODOs littered throughout. It does not support some basic features which you may find useful:
