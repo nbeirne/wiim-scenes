@@ -70,6 +70,7 @@ These scenes can be annoying to write. There are shortcuts to writing them.
 3. If outputing to airplay and there is no airplay dictionary, it defaults to selecting all airplay devices.
 4. An airplay device list may just use the name, instead of specifying a full dictionary. Example: `{ "output": { "mode": "airplay", "airplay": ["device1", "device2"] }`
 
+Any place which takes a Scene as input may also take a list of scenes. If the current state matches the inputs/outputs of a scene in the list, it will rotate through to he next scene. Volume settings are ignored for now.
 
 ### Supported inputs:
 ```
@@ -115,14 +116,6 @@ This API is backwards compatible with the Wiim API. There is also a more conveni
 curl http://$ip:$port/httpapi.asp?command=$command
 curl http://$ip:$port/command/$command
 ```
-
-## Limitations
-This server is a personal project. I have TODOs littered throughout. It does not support some basic features which you may find useful:
-- Streaming to as subset of your airplay devices.
-- Streaming from multiple sources (if this is even possible).
-- Linkplay grouping.
-- Setting volume per-device.
-- Proper scene management.
 
 ## The Wiim API
 This project is possible through the use of a few undocumented Wiim APIs. Here is a list of useful endpoints for this (or similar) project, but please be careful.
