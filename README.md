@@ -109,6 +109,12 @@ curl http://$ip:$port/scene # GET to get the current scene. POST with a scene JS
 
 You may also POST a list of scenes to the scene endpoint. If a match to the current state exists in that list, it rotates to the next scene.
 
+### Saving and Loading Scenes by Name
+```
+curl http://$ip:$port/scenes        # GET to get the scene list. POST a name or a list to set a scene.
+curl http://$ip:$port/scenes/<name> # GET to get the scene json. POST to set the scene. PUT to save a scene JSON to this name.
+```
+
 ### Commands
 This API is backwards compatible with the Wiim API. There is also a more convenient endpoint which is equivalent.
 
